@@ -41,23 +41,18 @@ import org.matsim.core.scenario.ScenarioUtils;
 public class RandomPopulationGenerator {
 
 	private final static int SECONDS_IN_HOUR = 3600;
-
 	private final static int CONSTANT_SEED = 504000;
-	private final static int POISSON_MAX_ITERATIONS = 504000;
 	
-	// Uniform random generator 
 	private final JDKRandomGenerator uniformSampler;
-	
-	// Poisson random generator
 	private final PoissonDistribution poissonSampler;
 
 	// counter to be used as person id, increment every time
 	private int personId = 1;
-	private float avgPeopleInNode;
 	private float leaveHomeTime = 6;
 	private float leaveHomeWindowSize = 3;
 	private float workdayLength = 6;
 	private float workdayWindowSize = 4;
+	private float avgPeopleInNode;
 	private Network network;
 	private Population population;
 	
@@ -71,7 +66,8 @@ public class RandomPopulationGenerator {
 		this.network = network;
 		this.population = PopulationUtils.createPopulation(config, network);
 		this.uniformSampler  = new JDKRandomGenerator(CONSTANT_SEED);
-		this.poissonSampler = new PoissonDistribution(uniformSampler, this.avgPeopleInNode, 0.25, POISSON_MAX_ITERATIONS);
+		this.poissonSampler = new PoissonDistribution(uniformSampler, this.avgPeopleInNode, 
+				PoissonDistribution.DEFAULT_EPSILON, PoissonDistribution.DEFAULT_MAX_ITERATIONS);
 	}
 	
 	public RandomPopulationGenerator(Config config, long popSize) {
@@ -82,23 +78,14 @@ public class RandomPopulationGenerator {
 		this(null, network, popSize);
 	}
 
-	public static void main(String[] args) {
-		
-		Config config = ConfigUtils.loadConfig(args[0]);
-		RandomPopulationGenerator popGen = new RandomPopulationGenerator(config, 2500);
-
-		popGen.populateNodes();
-
-		// Write the population to a file.
-		MatsimWriter popWriter = new PopulationWriter(popGen.getPopulation());
-		popWriter.write("./output/population.xml");
-	}
-
 	public Population getPopulation() {
-		return population;
+		return this.population;
 	}
 
-	public Population populateNodes() {
+	/**
+	 * create population with a random spread over the network
+	 */
+	public void populateNodes() {
 		Node[] nodes = new Node[this.network.getNodes().size()]; 
 		this.network.getNodes().values().toArray(nodes);
 		System.out.println("The number of nodes is: " + nodes.length);
@@ -110,19 +97,34 @@ public class RandomPopulationGenerator {
 				this.population.addPerson(person);
 			}
 		}
-		return population;
 	}
 
-	public void createPlanToPerson(Node[] nodes, Node homeNode, Person person) {
+	/**
+	 * creates a how work home plane for a person living on homeNode
+	 * work will be a random node in the network
+	 * work start and end times are randomized based on the object attribute
+	 * 
+	 * @param nodes    array of all the nodes in the network
+	 * @param homeNode the home node for that person
+	 * @param person   the person to add the plan on
+	 */
+	private void createPlanToPerson(Node[] nodes, Node homeNode, Person person) {
 		PopulationFactory populationFactory = population.getFactory();
 		int workNodeId = uniformSampler.nextInt(nodes.length);
-		float leaveHome = this.shoot(this.leaveHomeTime, this.leaveHomeWindowSize);
-		float leaveWork = leaveHome + this.shoot(this.workdayLength, this.workdayWindowSize);
+		float leaveHome = this.randeWindow(this.leaveHomeTime, this.leaveHomeWindowSize);
+		float leaveWork = leaveHome + this.randeWindow(this.workdayLength, this.workdayWindowSize);
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, nodes[workNodeId], leaveWork);
 		person.addPlan(plan);
 	}
 	
-	private float shoot(float base, float window) {
+	/**
+	 * return a random number between base and (base + window)
+	 * 
+	 * @param base   the base size
+	 * @param window the size of the random window
+	 * @return a random number within the window
+	 */
+	private float randeWindow(float base, float window) {
 		return base + (window * uniformSampler.nextFloat());
 	}
 
@@ -176,4 +178,15 @@ public class RandomPopulationGenerator {
 		return plan;
 	}
 
+	public static void main(String[] args) {
+		
+		Config config = ConfigUtils.loadConfig(args[0]);
+		RandomPopulationGenerator popGen = new RandomPopulationGenerator(config, 2500);
+		
+		popGen.populateNodes();
+		
+		// Write the population to a file.
+		MatsimWriter popWriter = new PopulationWriter(popGen.getPopulation());
+		popWriter.write("./output/population.xml");
+	}
 }
