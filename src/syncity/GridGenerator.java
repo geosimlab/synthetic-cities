@@ -13,7 +13,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 /**
  * Generate a bidirectional grid
@@ -23,40 +24,98 @@ import java.util.Map;
 public class GridGenerator {
 
 	// capacity at all links
-	private static final long CAP_MAIN = 1800; // [veh/h]
-
-	// default link length for all other links
+	private static final long DEFAULT_CAPACITY = 1800; // [veh/h]
+	// default link length for all links
 	private static final int DEFAULT_LINK_LENGTH = 100; // [m]
-
-	// default num of Streets (north-south) in the grid
-	private static final int DEFALUT_STREETS_NUM = 20;
-
-	// default num of Avenues (east-west) in the grid
-	private static final int DEFAULT_AVENUE_NUM = 20;
-
-	// default speed for streets and avenues
+	// default num of Streets (north-south) and avenues (east-west) in the grid
+	private static final int DEFALUT_STREETS_NUM = 50;
+	private static final int DEFAULT_AVENUES_NUM = 50;
+	// default speed for both streets and avenues
 	private static final double DEFAULT_SPEED = 15; // [km/h]
+	
+	private long capacity;
+	private int linkLength;
+	private int numOfStreets;
+	private int numOfAvenues;
+	private double driveSpeedStreets;
+	private double driveSpeedAvenues;
+	private Network net;
+	
+	public GridGenerator() {
+		this(DEFAULT_CAPACITY, DEFALUT_STREETS_NUM, DEFAULT_AVENUES_NUM, 
+				DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
+	}
 
+	public GridGenerator(int numOfStreets, int numOfAvenues) {
+		this(DEFAULT_CAPACITY, numOfStreets, numOfAvenues, 
+				DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
+	}
+	
+	/**
+	 * generate a grid network in the given size, the links are all bidirectional
+	 * 
+	 * @param capacity the number of vehicles that can be in the same link
+	 * @param numOfStreets number of streets north to south
+	 * @param numOfAvenues number of avenues east to west
+	 * @param linkLength   the link length (in meters)
+	 * @param streetSpeed  vehicles speed in streets (in Km/h)
+	 * @param avenueSpeed  vehicles speed in avenues (in Km/h)
+	 */
+	public GridGenerator(long capacity, int numOfStreets, int numOfAvenues, int linkLength, double streetSpeed,
+			double avenueSpeed) {
+		this.capacity = capacity;
+		this.linkLength = linkLength;
+		this.numOfStreets = numOfStreets;
+		this.numOfAvenues = numOfAvenues;
+		this.driveSpeedStreets = streetSpeed;
+		this.driveSpeedAvenues = avenueSpeed;
+		this.net = NetworkUtils.createNetwork();
+	}
+	
+	public Network getNetwork() {
+		return this.net;
+	}
+
+	public int getNumOfStreets() {
+		return numOfStreets;
+	}
+	
+	public int getNumOfAvenues() {
+		return numOfAvenues;
+	}
+	
+	public String getTitle() {
+		return String.format("GridNetwork-%d_%d", this.numOfStreets, this.numOfAvenues);
+	}
+	
 	public static void main(String[] args) throws IOException {
-
-		Network net = generateGridNetwork(DEFALUT_STREETS_NUM, DEFAULT_AVENUE_NUM);
-
-		writeNetwork(net, "output/network.xml");
+		GridGenerator grid;
+		
+		if (args.length == 2) {
+			int streetsNum = Integer.parseInt(args[0]);
+			int avenueNum = Integer.parseInt(args[1]);
+			grid = new GridGenerator(streetsNum, avenueNum);
+		} else {
+			grid = new GridGenerator();			
+		}
+		
+		grid.generateGridNetwork();
+		grid.writeNetwork("output/");;
 	}
 
 	/**
 	 * Writes the net work to a file in the given path, if path is folder the
-	 * default name for the network file would be network.xml
+	 * default name for the network file would be "GridNetwork-(numOfStreets)_(numOfAvenues).xml"
 	 * 
-	 * @param net
+	 * @param outPath the path to write the network xml to
 	 * @throws IOException
 	 */
-	public static void writeNetwork(Network net, String outPath) throws IOException {
+	public void writeNetwork(String outPath) throws IOException {
 		Path out = Paths.get(outPath);
 		Path outputFolder;
 		if (Files.isDirectory(out)) {
 			outputFolder = out;
-			out = out.resolve("network.xml");
+			out = out.resolve(this.getTitle() + ".xml");
 		} else
 			outputFolder = out.getParent();
 		// create output folder if necessary
@@ -66,51 +125,27 @@ public class GridGenerator {
 		new NetworkWriter(net).write(out.toString());
 	}
 
-	/**
-	 * generate a grid net work in a given size, other parameters are default
-	 * 
-	 * @param numOfStreets number of streets north to south
-	 * @param numOfAvenues number of avenues east to west
-	 * @return the generated grid network object
-	 */
-	public static Network generateGridNetwork(int numOfStreets, int numOfAvenues) {
-		return generateGridNetwork(numOfStreets, numOfAvenues, DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
-	}
-
-	/**
-	 * generate a grid network in the given size, the links are all bidirectional
-	 * 
-	 * @param numOfStreets number of streets north to south
-	 * @param numOfAvenues number of avenues east to west
-	 * @param linkLength   the link length (in meters)
-	 * @param streetSpeed  vehicles speed in streets (in Km/h)
-	 * @param avenueSpeed  vehicles speed in avenues (in Km/h)
-	 * @return the generated grid network object
-	 */
-	public static Network generateGridNetwork(int numOfStreets, int numOfAvenues, int linkLength, double streetSpeed,
-			double avenueSpeed) {
+	public void generateGridNetwork() {
 		// create an empty network
-		Network net = NetworkUtils.createNetwork();
 		NetworkFactory fac = net.getFactory();
 
-		for (int st = 0; st < numOfStreets; ++st) {
-			for (int av = 0; av < numOfAvenues; ++av) {
+		for (int st = 0; st < this.numOfStreets; ++st) {
+			for (int av = 0; av < this.numOfAvenues; ++av) {
 				// create new node
 				String id = getNodeIdString(st, av);
-				Node newNode = fac.createNode(Id.createNodeId(id), new Coord(st * linkLength, av * linkLength));
+				Node newNode = fac.createNode(Id.createNodeId(id), new Coord(st * this.linkLength, av * this.linkLength));
 				net.addNode(newNode);
 				// connect new node to the previous nodes
 				if (av > 0) {
 					Node prevAvNode = getNodeByStAv(st, av - 1, net);
-					connectNodes(newNode, prevAvNode, net, linkLength, streetSpeed, true);
+					connectNodes(newNode, prevAvNode, this.net, this.linkLength, this.driveSpeedStreets, this.capacity, true);
 				}
 				if (st > 0) {
 					Node prevStNode = getNodeByStAv(st - 1, av, net);
-					connectNodes(newNode, prevStNode, net, linkLength, avenueSpeed, true);
+					connectNodes(newNode, prevStNode, this.net, this.linkLength, this.driveSpeedAvenues, this.capacity, true);
 				}
 			}
 		}
-		return net;
 	}
 
 	/**
@@ -121,22 +156,23 @@ public class GridGenerator {
 	 * @param net         the network the two nodes resides in
 	 * @param linkLength  the desired distance between the two node (in meters)
 	 * @param driveSpeed  the driving speed in he link between the two nodes
+	 * @param linkCapacity the capacity of the link
 	 * @param bidirection whether to create a link from dstNode to srcNode as well
 	 */
-	public static void connectNodes(Node srcNode, Node dstNode, Network net, int linkLength, double driveSpeed,
-			Boolean bidirection) {
+	public static void connectNodes(Node srcNode, Node dstNode, Network net, int linkLength, double driveSpeed, 
+			long linkCapacity, Boolean bidirection) {
 		NetworkFactory fac = net.getFactory();
 		String srcId = srcNode.getId().toString();
 		String dstId = dstNode.getId().toString();
 		double travelTime = linkLength / driveSpeed * 3.6; // [s]
 		// create links
 		Link l = fac.createLink(Id.createLinkId(srcId + "->" + dstId), srcNode, dstNode);
-		setLinkAttributes(l, CAP_MAIN, linkLength, travelTime);
+		setLinkAttributes(l, linkCapacity, linkLength, travelTime);
 		net.addLink(l);
 		if (bidirection) {
 			// create reverse link
 			l = fac.createLink(Id.createLinkId(dstId + "->" + srcId), dstNode, srcNode);
-			setLinkAttributes(l, CAP_MAIN, linkLength, travelTime);
+			setLinkAttributes(l, linkCapacity, linkLength, travelTime);
 			net.addLink(l);
 		}
 	}
