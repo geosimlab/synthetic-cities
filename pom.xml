@@ -35,12 +35,13 @@
 			<id>matsim</id>
 			<url>https://dl.bintray.com/matsim/matsim</url>
 		</repository>
- 		<repository>
-			<!-- For MATSim snapshots: -->
-			<id>ojo-snapshots</id>
-			<url>https://oss.jfrog.org/libs-snapshot</url>
+		<repository>
+			<!-- For AV contrib for matsim -->
+		    <id>matsim-eth</id>
+		    <url>https://dl.bintray.com/matsim-eth/matsim</url>
 		</repository>	
-	</repositories>
+  </repositories>
+	
   <dependencies>
 		<dependency>
 			<!-- This is the matsim "core": -->
@@ -49,6 +50,13 @@
 			<version>${matsim.version}</version>
 		</dependency>
 
+		<dependency>
+			<!-- This is matsim's AV contrib module -->
+		    <groupId>ch.ethz.matsim</groupId>
+		    <artifactId>av</artifactId>
+		    <version>1.0.3-matsim11</version>
+		</dependency>
+		
 		<dependency>
 			<!-- Include the JUnit testing library.  Not transitive. -->
 			<groupId>junit</groupId>
