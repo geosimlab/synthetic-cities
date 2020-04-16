@@ -7,8 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-import javax.annotation.Resource;
-
 import org.apache.log4j.Logger;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -52,6 +50,7 @@ public class ScenarioCreator {
 	private static final String[] SCENARIO_BASE_FILES = {"LPOptions.properties", "AmodeusOptions.properties"};
 	private static final int POP_SIZE = 100;
 
+	@SuppressWarnings("unused")
 	private Path configPath;
 	private Path scenarioDir;
 	private int numOfVehicles = 100;
@@ -100,7 +99,7 @@ public class ScenarioCreator {
 	}
 
 	public static void main(String[] args) throws IOException {
-		ScenarioCreator simulation = new ScenarioCreator(args[0], args[1], DEFAULT_DISPATCHER_ALGORITHM, 1);
+		new ScenarioCreator(args[0], args[1], DEFAULT_DISPATCHER_ALGORITHM, 1);
 	}
 
 	private boolean addNetworkIfMissing(boolean force) throws IOException {
