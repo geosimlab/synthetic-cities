@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 import org.matsim.core.config.Config;
@@ -48,6 +49,8 @@ public class ScenarioCreator {
 	private static final String OUTPUT_DIR = "output";
 	private static final String SCENARIO_BASE_DIR = "ScenarioBaseFiles/";
 	private static final String[] SCENARIO_BASE_FILES = { "LPOptions.properties", "AmodeusOptions.properties" };
+	public static final String[] DISPATCHING_ALGORITHMS = { "TShareDispatcher", "ExtDemandSupplyBeamSharing",
+			"DynamicRideSharingStrategy", "HighCapacityDispatcher" };
 
 	private Path configPath;
 	private Path scenarioDir;
@@ -60,45 +63,45 @@ public class ScenarioCreator {
 	private int numOfVehicles = 100;
 	private int numOfIterations = 3;
 	private int dispatchPeriod = 10;
+	private String dispatcherAlgorithm;
 	private String allowedLinkMode = "car";
-	private String dispatcherAlgorithm = "ExtDemandSupplyBeamSharing";
 
 	public ScenarioCreator(String baseConfigPath, String scenarioDirPath, int popSize, int numOfStreets,
-			int numOfAvenues) throws IOException {
-		this(scenarioDirPath, popSize, numOfStreets, numOfAvenues);
+			int numOfAvenues, String dispatcherAlgorithm) throws IOException {
+		this(scenarioDirPath, popSize, numOfStreets, numOfAvenues, dispatcherAlgorithm);
 		this.configPath = Paths.get(baseConfigPath);
 		this.config = ConfigUtils.loadConfig(this.configPath.toString());
 		this.setAllConfigParams();
 	}
 
-	public ScenarioCreator(String scenarioDirPath, int popSize, int numOfStreets, int numOfAvenues) {
-		this(scenarioDirPath);
+	public ScenarioCreator(String scenarioDirPath, int popSize, int numOfStreets, int numOfAvenues,
+			String dispatcherAlgorithm) {
+		this(scenarioDirPath, dispatcherAlgorithm);
 		this.popSize = popSize;
 		this.numOfAvenues = numOfAvenues;
 		this.numOfStreets = numOfStreets;
 	}
 
-	public ScenarioCreator(Config baseConfig, String scenarioDirPath, int popSize, int numOfStreets, int numOfAvenues) {
-		this(baseConfig, scenarioDirPath);
+	public ScenarioCreator(Config baseConfig, String scenarioDirPath, int popSize, int numOfStreets, int numOfAvenues,
+			String dispatcherAlgorithm) {
+		this(baseConfig, scenarioDirPath, dispatcherAlgorithm);
 		this.popSize = popSize;
 		this.numOfAvenues = numOfAvenues;
 		this.numOfStreets = numOfStreets;
 	}
 
-	public ScenarioCreator(String scenarioDirPath) {
+	public ScenarioCreator(String scenarioDirPath, String dispatcherAlgorithm) {
 		this.configPath = null;
 		this.scenarioDir = Paths.get(scenarioDirPath);
-		this.config = ConfigUtils.createConfig();
+		this.config = ConfigUtils.createConfig(scenarioDirPath.toString());
+		this.dispatcherAlgorithm = dispatcherAlgorithm;
 	}
 
-	public ScenarioCreator(Config config, String scenarioDirPath) {
+	public ScenarioCreator(Config baseConfig, String scenarioDirPath, String dispatcherAlgorithm) {
 		this.configPath = null;
 		this.scenarioDir = Paths.get(scenarioDirPath);
-		this.config = config;
-	}
-
-	public static void main(String[] args) throws IOException {
-		new ScenarioCreator(args[0], args[1], 100, 20, 20);
+		this.config = baseConfig;
+		this.dispatcherAlgorithm = dispatcherAlgorithm;
 	}
 
 	/**
@@ -112,14 +115,13 @@ public class ScenarioCreator {
 	 */
 	public void setAllConfigParams() throws IOException {
 		this.setQSimParams();
-
-		boolean newNetwork = this.addNetworkIfMissing(false);
-		this.addPopulationIfMissing(newNetwork);
-
 		this.addAVConfigGroup();
 		this.setPlanSelectionParams();
 		this.setPlanCalcScoreParams();
 		this.setControlerParams(false);
+
+		boolean newNetwork = this.addNetworkIfMissing(false);
+		this.addPopulationIfMissing(newNetwork);
 		this.config.checkConsistency();
 	}
 
@@ -131,7 +133,7 @@ public class ScenarioCreator {
 	 * 
 	 * @throws IOException
 	 */
-	public void writeScenarioDir() throws IOException {
+	public void writeScenarioFiles() throws IOException {
 		ConfigUtils.writeConfig(this.config, this.scenarioDir.resolve(SCENARIO_CONFIG_FILENAME).toString());
 		copyScenarioResources(this.scenarioDir);
 
@@ -185,20 +187,21 @@ public class ScenarioCreator {
 	private boolean addNetworkIfMissing(boolean force) throws IOException {
 		String filename;
 		boolean newNetwork;
-		if (this.config.network().getInputFile() != null && !force) {
+		if (this.config.network().getInputFile() == null || force) {
+			GridGenerator grid = new GridGenerator(this.numOfStreets, this.numOfAvenues);
+			grid.generateGridNetwork();
+			String netwokFile = grid.writeNetwork(this.scenarioDir.toString());
+			log.info("network file is: " + netwokFile);
+			Path relativeNetworkFile = Paths.get(netwokFile).getFileName();
+			filename = relativeNetworkFile.toString();
+			newNetwork = true;
+		} else {
 			log.info("Network file is already specified in the config, copying it to the scenario dir");
 			String curFilename = this.config.network().getInputFile();
 			Path srcPath = this.configPath.getParent().resolve(curFilename);
 			Path destPath = copyFileToDir(srcPath, this.scenarioDir);
 			filename = destPath.getFileName().toString();
 			newNetwork = false;
-		} else {
-			GridGenerator grid = new GridGenerator(this.numOfStreets, this.numOfAvenues);
-			grid.generateGridNetwork();
-			String netwokFile = grid.writeNetwork(this.scenarioDir.toString());
-			Path relativeNetworkFile = Paths.get(netwokFile).getFileName();
-			filename = relativeNetworkFile.toString();
-			newNetwork = true;
 		}
 		this.config.network().setInputFile(filename);
 		return newNetwork;
@@ -216,19 +219,19 @@ public class ScenarioCreator {
 	private boolean addPopulationIfMissing(boolean force) throws IOException {
 		String filename;
 		boolean newPopulation;
-		if (this.config.plans().getInputFile() != null && !force) {
+		if (this.config.plans().getInputFile() == null || force) {
+			RandomPopulationGenerator popGen = new RandomPopulationGenerator(this.config, this.popSize);
+			popGen.populateNodes();
+			String plansFile = popGen.writePopulation(this.scenarioDir.toString());
+			filename = Paths.get(plansFile).getFileName().toString();
+			newPopulation = true;
+		} else {
 			log.info("Plans (Population) file is already specified in the config, copying it to the scenario dir");
 			String curFilename = this.config.plans().getInputFile();
 			Path srcPath = this.configPath.getParent().resolve(curFilename);
 			Path destPath = copyFileToDir(srcPath, scenarioDir);
 			filename = destPath.getFileName().toString();
 			newPopulation = false;
-		} else {
-			RandomPopulationGenerator popGen = new RandomPopulationGenerator(this.config, this.popSize);
-			popGen.populateNodes();
-			String plansFile = popGen.writePopulation(this.scenarioDir.toString());
-			filename = Paths.get(plansFile).getFileName().toString();
-			newPopulation = true;
 		}
 		this.config.plans().setInputFile(filename);
 		return newPopulation;
@@ -249,6 +252,7 @@ public class ScenarioCreator {
 		operator.setPredictRouteTravelTime(true);
 		// Dispatcher
 		operator.getDispatcherConfig().setType(this.dispatcherAlgorithm);
+		// TODO add rebalancePeriod as in DynamicRideSharingStrategy
 		operator.getDispatcherConfig().addParam("dispatchPeriod", String.valueOf(this.dispatchPeriod));
 		// Vehicle Generator
 		operator.getGeneratorConfig().setNumberOfVehicles(this.numOfVehicles);
@@ -376,6 +380,10 @@ public class ScenarioCreator {
 	}
 
 	public void setDispatcherAlgorithm(String dispatcherAlgorithm) {
+		if (!Arrays.asList(DISPATCHING_ALGORITHMS).contains(dispatcherAlgorithm)) {
+			log.warn("The specified dispatching algorithm is unknown, which might cause problems later. "
+					+ "The known algorithms are: " + Arrays.deepToString(DISPATCHING_ALGORITHMS));
+		}
 		this.dispatcherAlgorithm = dispatcherAlgorithm;
 		if (this.avConfig != null) {
 			OperatorConfig operator = getOperatorConfig();
