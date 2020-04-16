@@ -1,5 +1,10 @@
 package syncity;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -8,13 +13,6 @@ import org.matsim.api.core.v01.network.NetworkFactory;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.NetworkWriter;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import org.apache.commons.math3.distribution.PoissonDistribution;
 
 /**
  * Generate a bidirectional grid
@@ -72,45 +70,37 @@ public class GridGenerator {
 		this.net = NetworkUtils.createNetwork();
 	}
 	
+	public static String writeDefaultNetwork(String outPath) throws IOException {
+		GridGenerator grid = new GridGenerator();
+		grid.generateGridNetwork();
+		return grid.writeNetwork(outPath);
+	}
+	
 	public Network getNetwork() {
 		return this.net;
 	}
 
 	public int getNumOfStreets() {
-		return numOfStreets;
+		return this.numOfStreets;
 	}
 	
 	public int getNumOfAvenues() {
-		return numOfAvenues;
+		return this.numOfAvenues;
 	}
 	
 	public String getTitle() {
 		return String.format("GridNetwork-%d_%d", this.numOfStreets, this.numOfAvenues);
 	}
-	
-	public static void main(String[] args) throws IOException {
-		GridGenerator grid;
-		
-		if (args.length == 2) {
-			int streetsNum = Integer.parseInt(args[0]);
-			int avenueNum = Integer.parseInt(args[1]);
-			grid = new GridGenerator(streetsNum, avenueNum);
-		} else {
-			grid = new GridGenerator();			
-		}
-		
-		grid.generateGridNetwork();
-		grid.writeNetwork("output/");;
-	}
 
 	/**
-	 * Writes the net work to a file in the given path, if path is folder the
+	 * Writes the network to a file in the given path, if path is folder the
 	 * default name for the network file would be "GridNetwork-(numOfStreets)_(numOfAvenues).xml"
 	 * 
 	 * @param outPath the path to write the network xml to
+	 * @return the absolute path of the created file
 	 * @throws IOException
 	 */
-	public void writeNetwork(String outPath) throws IOException {
+	public String writeNetwork(String outPath) throws IOException {
 		Path out = Paths.get(outPath);
 		Path outputFolder;
 		if (Files.isDirectory(out)) {
@@ -122,26 +112,27 @@ public class GridGenerator {
 		Files.createDirectories(outputFolder);
 
 		// write network
-		new NetworkWriter(net).write(out.toString());
+		new NetworkWriter(this.net).write(out.toString());
+		return out.toAbsolutePath().toString();
 	}
 
 	public void generateGridNetwork() {
 		// create an empty network
-		NetworkFactory fac = net.getFactory();
+		NetworkFactory fac = this.net.getFactory();
 
 		for (int st = 0; st < this.numOfStreets; ++st) {
 			for (int av = 0; av < this.numOfAvenues; ++av) {
 				// create new node
 				String id = getNodeIdString(st, av);
 				Node newNode = fac.createNode(Id.createNodeId(id), new Coord(st * this.linkLength, av * this.linkLength));
-				net.addNode(newNode);
+				this.net.addNode(newNode);
 				// connect new node to the previous nodes
 				if (av > 0) {
-					Node prevAvNode = getNodeByStAv(st, av - 1, net);
+					Node prevAvNode = getNodeByStAv(st, av - 1, this.net);
 					connectNodes(newNode, prevAvNode, this.net, this.linkLength, this.driveSpeedStreets, this.capacity, true);
 				}
 				if (st > 0) {
-					Node prevStNode = getNodeByStAv(st - 1, av, net);
+					Node prevStNode = getNodeByStAv(st - 1, av, this.net);
 					connectNodes(newNode, prevStNode, this.net, this.linkLength, this.driveSpeedAvenues, this.capacity, true);
 				}
 			}
@@ -227,6 +218,21 @@ public class GridGenerator {
 		// agents have to reach the end of the link before the time step ends to
 		// be able to travel forward in the next time step (matsim time step logic)
 		link.setFreespeed(link.getLength() / (travelTime - 0.1));
+	}
+	
+	public static void main(String[] args) throws IOException {
+		GridGenerator grid;
+		
+		if (args.length == 2) {
+			int streetsNum = Integer.parseInt(args[0]);
+			int avenueNum = Integer.parseInt(args[1]);
+			grid = new GridGenerator(streetsNum, avenueNum);
+		} else {
+			grid = new GridGenerator();			
+		}
+		
+		grid.generateGridNetwork();
+		grid.writeNetwork("output/");;
 	}
 
 }

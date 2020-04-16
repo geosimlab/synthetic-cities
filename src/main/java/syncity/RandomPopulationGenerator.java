@@ -1,5 +1,10 @@
 package syncity;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.matsim.api.core.v01.Id;
@@ -48,38 +53,67 @@ public class RandomPopulationGenerator {
 
 	// counter to be used as person id, increment every time
 	private int personId = 1;
+	private int popSize;
 	private float leaveHomeTime = 6;
 	private float leaveHomeWindowSize = 3;
 	private float workdayLength = 6;
 	private float workdayWindowSize = 4;
-	private float avgPeopleInNode;
 	private Network network;
 	private Population population;
 	
-	public RandomPopulationGenerator(Config config, Network network, long popSize) {
+	public RandomPopulationGenerator(Config config, Network network, int popSize) {
 		if (network == null) {
 			network = ScenarioUtils.loadScenario(config).getNetwork();
 		} else if (config == null) {
 			config = ConfigUtils.createConfig();
 		}
-		this.avgPeopleInNode = popSize / (float) network.getNodes().size();
+		this.popSize = popSize;
+		float avgPeopleInNode = popSize / (float) network.getNodes().size();
 		this.network = network;
 		this.population = PopulationUtils.createPopulation(config, network);
 		this.uniformSampler  = new JDKRandomGenerator(CONSTANT_SEED);
-		this.poissonSampler = new PoissonDistribution(uniformSampler, this.avgPeopleInNode, 
+		this.poissonSampler = new PoissonDistribution(uniformSampler, avgPeopleInNode, 
 				PoissonDistribution.DEFAULT_EPSILON, PoissonDistribution.DEFAULT_MAX_ITERATIONS);
 	}
 	
-	public RandomPopulationGenerator(Config config, long popSize) {
+	public RandomPopulationGenerator(Config config, int popSize) {
 		this(config, null, popSize);
 	}
 	
-	public RandomPopulationGenerator(Network network, long popSize) {
+	public RandomPopulationGenerator(Network network, int popSize) {
 		this(null, network, popSize);
 	}
 
 	public Population getPopulation() {
 		return this.population;
+	}
+	
+	/**
+	 * Writes the population to a file in the given path, if path is folder the
+	 * default name for the population file would be "Population-(popSize).xml"
+	 * 
+	 * @param outPath the path to write the population xml to
+	 * @return the absolute path of the created file
+	 * @throws IOException
+	 */
+	public String writePopulation(String outPath) throws IOException {
+		Path out = Paths.get(outPath);
+		Path outputFolder;
+		if (Files.isDirectory(out)) {
+			outputFolder = out;
+			out = out.resolve(this.getTitle() + ".xml");
+		} else
+			outputFolder = out.getParent();
+		// create output folder if necessary
+		Files.createDirectories(outputFolder);
+
+		// write network
+		new PopulationWriter(population).write(out.toString());
+		return out.toAbsolutePath().toString();
+	}
+
+	private String getTitle() {
+		return String.format("Population-%d", this.popSize);
 	}
 
 	/**
@@ -98,6 +132,13 @@ public class RandomPopulationGenerator {
 			}
 		}
 	}
+	
+	/**
+	 * A different name for the same functionality :*
+	 */
+	public void generatePopulation() {
+		populateNodes();
+	}
 
 	/**
 	 * creates a how work home plane for a person living on homeNode
@@ -111,8 +152,8 @@ public class RandomPopulationGenerator {
 	private void createPlanToPerson(Node[] nodes, Node homeNode, Person person) {
 		PopulationFactory populationFactory = population.getFactory();
 		int workNodeId = uniformSampler.nextInt(nodes.length);
-		float leaveHome = this.randeWindow(this.leaveHomeTime, this.leaveHomeWindowSize);
-		float leaveWork = leaveHome + this.randeWindow(this.workdayLength, this.workdayWindowSize);
+		float leaveHome = this.randInWindow(this.leaveHomeTime, this.leaveHomeWindowSize);
+		float leaveWork = leaveHome + this.randInWindow(this.workdayLength, this.workdayWindowSize);
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, nodes[workNodeId], leaveWork);
 		person.addPlan(plan);
 	}
@@ -124,7 +165,7 @@ public class RandomPopulationGenerator {
 	 * @param window the size of the random window
 	 * @return a random number within the window
 	 */
-	private float randeWindow(float base, float window) {
+	private float randInWindow(float base, float window) {
 		return base + (window * uniformSampler.nextFloat());
 	}
 
