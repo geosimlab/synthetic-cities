@@ -120,14 +120,14 @@ public class RandomPopulationGenerator {
 	 * create population with a random spread over the network
 	 */
 	public void populateNodes() {
-		Node[] nodes = new Node[this.network.getNodes().size()]; 
-		this.network.getNodes().values().toArray(nodes);
-		System.out.println("The number of nodes is: " + nodes.length);
-		for (Node node : nodes) {
+		Node[] nodesArray = new Node[this.network.getNodes().size()]; 
+		this.network.getNodes().values().toArray(nodesArray);
+		System.out.println("The number of nodes is: " + nodesArray.length);
+		for (Node homeNode : nodesArray) {
 			int popInNode = this.poissonSampler.sample();
 			for (int j = 0; j < popInNode; j++) {
 				Person person = this.createPerson();
-				createPlanToPerson(nodes, node, person);
+				createPlanToPerson(nodesArray, homeNode, person);
 				this.population.addPerson(person);
 			}
 		}
