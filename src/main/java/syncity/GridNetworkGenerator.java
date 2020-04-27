@@ -19,7 +19,7 @@ import org.matsim.core.network.io.NetworkWriter;
  * 
  * @author theFrok
  */
-public class GridGenerator {
+public class GridNetworkGenerator {
 
 	// capacity at all links
 	private static final long DEFAULT_CAPACITY = 1800; // [veh/h]
@@ -39,12 +39,12 @@ public class GridGenerator {
 	private double driveSpeedAvenues;
 	private Network net;
 	
-	public GridGenerator() {
+	public GridNetworkGenerator() {
 		this(DEFAULT_CAPACITY, DEFALUT_STREETS_NUM, DEFAULT_AVENUES_NUM, 
 				DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
 	}
 
-	public GridGenerator(int numOfStreets, int numOfAvenues) {
+	public GridNetworkGenerator(int numOfStreets, int numOfAvenues) {
 		this(DEFAULT_CAPACITY, numOfStreets, numOfAvenues, 
 				DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
 	}
@@ -59,7 +59,7 @@ public class GridGenerator {
 	 * @param streetSpeed  vehicles speed in streets (in Km/h)
 	 * @param avenueSpeed  vehicles speed in avenues (in Km/h)
 	 */
-	public GridGenerator(long capacity, int numOfStreets, int numOfAvenues, int linkLength, double streetSpeed,
+	public GridNetworkGenerator(long capacity, int numOfStreets, int numOfAvenues, int linkLength, double streetSpeed,
 			double avenueSpeed) {
 		this.capacity = capacity;
 		this.linkLength = linkLength;
@@ -71,7 +71,7 @@ public class GridGenerator {
 	}
 	
 	public static String writeDefaultNetwork(String outPath) throws IOException {
-		GridGenerator grid = new GridGenerator();
+		GridNetworkGenerator grid = new GridNetworkGenerator();
 		grid.generateGridNetwork();
 		return grid.writeNetwork(outPath);
 	}
@@ -221,14 +221,14 @@ public class GridGenerator {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		GridGenerator grid;
+		GridNetworkGenerator grid;
 		
 		if (args.length == 2) {
 			int streetsNum = Integer.parseInt(args[0]);
 			int avenueNum = Integer.parseInt(args[1]);
-			grid = new GridGenerator(streetsNum, avenueNum);
+			grid = new GridNetworkGenerator(streetsNum, avenueNum);
 		} else {
-			grid = new GridGenerator();			
+			grid = new GridNetworkGenerator();			
 		}
 		
 		grid.generateGridNetwork();

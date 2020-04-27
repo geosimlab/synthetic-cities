@@ -124,7 +124,9 @@ public class RandomPopulationGenerator {
 		this.network.getNodes().values().toArray(nodesArray);
 		System.out.println("The number of nodes is: " + nodesArray.length);
 		for (Node homeNode : nodesArray) {
-			int popInNode = this.poissonSampler.sample();
+//			Now we are just using constant number of people in each node
+//			int popInNode = this.poissonSampler.sample();
+			int popInNode = popSize / network.getNodes().size();
 			for (int j = 0; j < popInNode; j++) {
 				Person person = this.createPerson();
 				createPlanToPerson(nodesArray, homeNode, person);
