@@ -18,7 +18,6 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.api.core.v01.population.PopulationWriter;
-import org.matsim.core.api.internal.MatsimWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PopulationUtils;
@@ -29,13 +28,12 @@ import org.matsim.core.scenario.ScenarioUtils;
  * network/config.
  * 
  * As I learned so far, amodeus has some restriction on the population format:
- *  1. Activity location must be specified by a link, and not with coordinates,
- *     otherwise the population cutter will judge it out of network. 
- *  2. Each leg must have a dep_time, and each activity (except for the last) must have
- *     end_time, otherwise the population cutter will judge it out of time window
- *     for simulation. 
- *  3. To use an av leg mode needs to be "av", some time it is changed automatically 
- *     to "av" and some times not.
+ * 1. Activity location must be specified by a link, and not with coordinates,
+ * otherwise the population cutter will judge it out of network. 2. Each leg
+ * must have a dep_time, and each activity (except for the last) must have
+ * end_time, otherwise the population cutter will judge it out of time window
+ * for simulation. 3. To use an av leg mode needs to be "av", some time it is
+ * changed automatically to "av" and some times not.
  * 
  * 1 & 2 can be avoided by setting populationCutter=NONE in
  * amodeusOptions.properties
@@ -47,8 +45,9 @@ public class RandomPopulationGenerator {
 
 	private final static int SECONDS_IN_HOUR = 3600;
 	private final static int CONSTANT_SEED = 504000;
-	
+
 	private final JDKRandomGenerator uniformSampler;
+	@SuppressWarnings("unused")
 	private final PoissonDistribution poissonSampler;
 
 	// counter to be used as person id, increment every time
@@ -60,26 +59,31 @@ public class RandomPopulationGenerator {
 	private float workdayWindowSize = 4;
 	private Network network;
 	private Population population;
-	
+
 	public RandomPopulationGenerator(Config config, Network network, int popSize) {
 		if (network == null) {
 			network = ScenarioUtils.loadScenario(config).getNetwork();
 		} else if (config == null) {
 			config = ConfigUtils.createConfig();
 		}
+		if (network.getNodes().size() > popSize) {
+			throw new RuntimeException(
+					"Populoation size is too small for the size of the network. The number of nodes is: "
+							+ network.getNodes().size() + " " + "The population size is: " + popSize);
+		}
 		this.popSize = popSize;
 		float avgPeopleInNode = popSize / (float) network.getNodes().size();
 		this.network = network;
 		this.population = PopulationUtils.createPopulation(config, network);
-		this.uniformSampler  = new JDKRandomGenerator(CONSTANT_SEED);
-		this.poissonSampler = new PoissonDistribution(uniformSampler, avgPeopleInNode, 
+		this.uniformSampler = new JDKRandomGenerator(CONSTANT_SEED);
+		this.poissonSampler = new PoissonDistribution(uniformSampler, avgPeopleInNode,
 				PoissonDistribution.DEFAULT_EPSILON, PoissonDistribution.DEFAULT_MAX_ITERATIONS);
 	}
-	
+
 	public RandomPopulationGenerator(Config config, int popSize) {
 		this(config, null, popSize);
 	}
-	
+
 	public RandomPopulationGenerator(Network network, int popSize) {
 		this(null, network, popSize);
 	}
@@ -87,7 +91,7 @@ public class RandomPopulationGenerator {
 	public Population getPopulation() {
 		return this.population;
 	}
-	
+
 	/**
 	 * Writes the population to a file in the given path, if path is folder the
 	 * default name for the population file would be "Population-(popSize).xml"
@@ -120,9 +124,9 @@ public class RandomPopulationGenerator {
 	 * create population with a random spread over the network
 	 */
 	public void populateNodes() {
-		Node[] nodesArray = new Node[this.network.getNodes().size()]; 
+		Node[] nodesArray = new Node[this.network.getNodes().size()];
 		this.network.getNodes().values().toArray(nodesArray);
-		System.out.println("The number of nodes is: " + nodesArray.length);
+		System.out.println("The number of network nodes is: " + nodesArray.length);
 		for (Node homeNode : nodesArray) {
 //			Now we are just using constant number of people in each node
 //			int popInNode = this.poissonSampler.sample();
@@ -134,7 +138,7 @@ public class RandomPopulationGenerator {
 			}
 		}
 	}
-	
+
 	/**
 	 * A different name for the same functionality :*
 	 */
@@ -143,9 +147,9 @@ public class RandomPopulationGenerator {
 	}
 
 	/**
-	 * creates a how work home plane for a person living on homeNode
-	 * work will be a random node in the network
-	 * work start and end times are randomized based on the object attribute
+	 * creates a how work home plane for a person living on homeNode work will be a
+	 * random node in the network work start and end times are randomized based on
+	 * the object attribute
 	 * 
 	 * @param nodes    array of all the nodes in the network
 	 * @param homeNode the home node for that person
@@ -159,7 +163,7 @@ public class RandomPopulationGenerator {
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, nodes[workNodeId], leaveWork);
 		person.addPlan(plan);
 	}
-	
+
 	/**
 	 * return a random number between base and (base + window)
 	 * 
@@ -171,7 +175,7 @@ public class RandomPopulationGenerator {
 		return base + (window * uniformSampler.nextFloat());
 	}
 
-	/** 
+	/**
 	 * A method to prevent double use of ids
 	 * 
 	 * @return a person instance
@@ -221,15 +225,13 @@ public class RandomPopulationGenerator {
 		return plan;
 	}
 
-	public static void main(String[] args) {
-		
+	public static void main(String[] args) throws IOException {
+
 		Config config = ConfigUtils.loadConfig(args[0]);
 		RandomPopulationGenerator popGen = new RandomPopulationGenerator(config, 2500);
-		
+
 		popGen.populateNodes();
-		
-		// Write the population to a file.
-		MatsimWriter popWriter = new PopulationWriter(popGen.getPopulation());
-		popWriter.write("./output/population.xml");
+
+		popGen.writePopulation("./output/");
 	}
 }

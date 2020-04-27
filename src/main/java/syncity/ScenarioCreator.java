@@ -7,38 +7,42 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.contrib.drt.optimizer.rebalancing.mincostflow.MinCostFlowRebalancingParams;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
+import org.matsim.contrib.drt.run.DrtControlerCreator;
+import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
+import org.matsim.contrib.dvrp.fleet.DvrpVehicleSpecification;
+import org.matsim.contrib.dvrp.fleet.FleetWriter;
+import org.matsim.contrib.dvrp.fleet.ImmutableDvrpVehicleSpecification;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
+import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
+import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vis.otfvis.OTFVisConfigGroup;
 
 import ch.ethz.matsim.av.config.AVConfigGroup;
 import ch.ethz.matsim.av.config.operator.GeneratorConfig;
 import ch.ethz.matsim.av.config.operator.OperatorConfig;
-import ch.ethz.matsim.av.framework.AVModule;;
+import ch.ethz.matsim.av.framework.AVModule;
 
-/*
- * [] Plan
- *    [] @pre: have a folder with these files: `config.xml`, `AmodeusOptions.properties` and `LPOptions.properties`
- *    [x] read config
- *    [x] if the (config is missing network):
- *        [x] create network file and add it to the config
- *        [x] create population and add it as well
- *        [x] else if (config is missing population file):
- *            [x] read network
- *            [x] create population
- *    [] for each algorithm
- *        [x] create an AVConfigGroup
- *        [x] add the ConfigGroup to the config (and update outputFolder)
- *        [] prepare aMoD scenario
- *        [] run aMoD server
- *        
+/*  
  *  @author: theFrok
  */
 public class ScenarioCreator {
@@ -49,13 +53,15 @@ public class ScenarioCreator {
 	private static final String OUTPUT_DIR = "output";
 	private static final String SCENARIO_BASE_DIR = "ScenarioBaseFiles/";
 	private static final String[] SCENARIO_BASE_FILES = { "LPOptions.properties", "AmodeusOptions.properties" };
-	public static final String[] DISPATCHING_ALGORITHMS = { "TShareDispatcher", "ExtDemandSupplyBeamSharing",
+	public static final String DRT_DISPATCHER = "DRT";
+	public static final String[] DISPATCHING_ALGORITHMS = { DRT_DISPATCHER, "TShareDispatcher", "ExtDemandSupplyBeamSharing",
 			"DynamicRideSharingStrategy", "HighCapacityDispatcher" };
 
 	private Path configPath;
 	private Path scenarioDir;
 	private Config config;
-	private AVConfigGroup avConfig;
+	private ConfigGroup vehicleConfig;
+	private boolean isAVDispatcher;
 
 	private int popSize = 1000;
 	private int numOfStreets = 20;
@@ -64,7 +70,7 @@ public class ScenarioCreator {
 	private int numOfIterations = 3;
 	private int dispatchPeriod = 10;
 	private String dispatcherAlgorithm;
-	private String allowedLinkMode = "car";
+	private String allowedLinkMode = TransportMode.car;
 
 	public ScenarioCreator(String baseConfigPath, String scenarioDirPath, int popSize, int numOfStreets,
 			int numOfAvenues, String dispatcherAlgorithm) throws IOException {
@@ -115,13 +121,17 @@ public class ScenarioCreator {
 	 */
 	public void setAllConfigParams() throws IOException {
 		this.setQSimParams();
-		this.addAVConfigGroup();
-		this.setPlanSelectionParams();
-		this.setPlanCalcScoreParams();
-		this.setControlerParams(false);
-
 		boolean newNetwork = this.addNetworkIfMissing(false);
 		this.addPopulationIfMissing(newNetwork);
+		if (this.dispatcherAlgorithm.equals(DRT_DISPATCHER)) {
+			this.addDRTConfigGroup(true); // maybe this needs zones file check (ZoneDemand..)
+		} else {
+			this.addAVConfigGroup();
+		}
+		this.setPlanSelectionParams();
+		this.setPlanCalcScoreParams();
+		this.setControlerParams(true);
+
 		this.config.checkConsistency();
 	}
 
@@ -176,7 +186,7 @@ public class ScenarioCreator {
 
 	/**
 	 * Checks if the config already has a network file specified, if so copies that
-	 * file to the scenario dir, if not creates one using the {@link GridGenerator}
+	 * file to the scenario dir, if not creates one using the {@link GridNetworkGenerator}
 	 * and write it to the scenario dir.
 	 * 
 	 * @param force If true creates a new network even if there is already one
@@ -188,7 +198,7 @@ public class ScenarioCreator {
 		String filename;
 		boolean newNetwork;
 		if (this.config.network().getInputFile() == null || force) {
-			GridGenerator grid = new GridGenerator(this.numOfStreets, this.numOfAvenues);
+			GridNetworkGenerator grid = new GridNetworkGenerator(this.numOfStreets, this.numOfAvenues);
 			grid.generateGridNetwork();
 			String netwokFile = grid.writeNetwork(this.scenarioDir.toString());
 			log.info("network file is: " + netwokFile);
@@ -242,7 +252,7 @@ public class ScenarioCreator {
 	 * dispatcherAlgorithm, allowedLinkMode, dispatchPeriod, numberOfVehicles
 	 * 
 	 * @param dispatcherAlgorithm the name of the dispatcher algorithm
-	 * @return the AVConfigGroup created
+	 * 
 	 */
 	private void addAVConfigGroup() {
 		AVConfigGroup avConfigGroup = new AVConfigGroup();
@@ -259,7 +269,78 @@ public class ScenarioCreator {
 
 		avConfigGroup.addParameterSet(operator);
 		this.config.addModule(avConfigGroup);
-		this.avConfig = avConfigGroup;
+		this.vehicleConfig = avConfigGroup;
+		this.isAVDispatcher = true;
+	}
+
+	/**
+	 * Creates and sets the DRT config for the dispatcher, including
+	 * dispatcherAlgorithm, allowedLinkMode, dispatchPeriod, numberOfVehicles
+	 * 
+	 * @param dispatcherAlgorithm the name of the dispatcher algorithm
+	 * 
+	 */
+	private void addDRTConfigGroup(boolean rebalancing) {
+		DrtConfigGroup drtConfigGroup = new DrtConfigGroup();
+		// We use av so we'll be able to use the same plans for DRT and AV
+		drtConfigGroup.setMode("av");
+		drtConfigGroup.setOperationalScheme(OperationalScheme.door2door.toString());;
+		drtConfigGroup.setMaxTravelTimeAlpha(1.3);
+		drtConfigGroup.setMaxTravelTimeBeta(1200);
+		drtConfigGroup.setMaxWaitTime(1200);
+		drtConfigGroup.setRequestRejection(false);
+		drtConfigGroup.setStopDuration(60.0);
+		String vehiclesFile = createVehiclesFile();
+		drtConfigGroup.setVehiclesFile(vehiclesFile);
+		
+		if (rebalancing) {
+			MinCostFlowRebalancingParams rebalance = new MinCostFlowRebalancingParams();
+			rebalance.setTargetAlpha(0.5);
+			rebalance.setTargetBeta(0.5);
+			rebalance.setInterval(1800);
+			rebalance.setCellSize(2000);
+			drtConfigGroup.addParameterSet(rebalance);
+		}
+		
+//		MultiModeDrtConfigGroup multiDrt = new MultiModeDrtConfigGroup();
+//		multiDrt.addParameterSet(drtConfigGroup);
+//		config.addModule(multiDrt);
+		config.addModule(drtConfigGroup); 
+		DvrpConfigGroup dvrp = new DvrpConfigGroup();
+		config.addModule(dvrp);
+		OTFVisConfigGroup otfvis = new OTFVisConfigGroup();
+		config.addModule(otfvis);
+		
+		DrtControlerCreator.createControlerWithSingleModeDrt(config, false);
+
+		this.vehicleConfig = drtConfigGroup;
+		this.isAVDispatcher = false;
+	}
+	
+	private String createVehiclesFile() {
+		
+		int seatsPerVehicle = 4; //this is important for DRT, value is not used by taxi
+		double operationStartTime = 0;
+		double operationEndTime = 30 * 60 * 60; //30h
+		Random random = MatsimRandom.getRandom();
+		
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+//		new MatsimNetworkReader(this.config.network());
+		final int[] i = {0};
+		Stream<DvrpVehicleSpecification> vehicleSpecificationStream = scenario.getNetwork().getLinks().entrySet().stream()
+				.filter(entry -> entry.getValue().getAllowedModes().contains(this.allowedLinkMode)) // drt can only start on links with Transport mode 'car'
+				.sorted((e1, e2) -> (random.nextInt(2) - 1)) // shuffle links
+				.limit(this.numOfVehicles) // select the first *numberOfVehicles* links
+				.map(entry -> ImmutableDvrpVehicleSpecification.newBuilder()
+						.id(Id.create("drt_" + i[0]++, DvrpVehicle.class))
+						.startLinkId(entry.getKey())
+						.capacity(seatsPerVehicle)
+						.serviceBeginTime(operationStartTime)
+						.serviceEndTime(operationEndTime)
+						.build());
+		
+		new FleetWriter(vehicleSpecificationStream).write(scenarioDir.resolve("vehicles.xml").toString());
+		return scenarioDir.resolve("vehicles.xml").toString();
 	}
 
 	/**
@@ -285,9 +366,15 @@ public class ScenarioCreator {
 	}
 
 	private void setQSimParams() {
-		this.config.qsim().setStartTime(0);
-		this.config.qsim().setEndTime(30 * 3600);
-		this.config.qsim().setNumberOfThreads(4);
+		final QSimConfigGroup qsim = this.config.qsim();
+		qsim.setStartTime(0);
+		qsim.setEndTime(30 * 3600);
+		qsim.setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
+		if (this.isAVDispatcher) {
+			qsim.setNumberOfThreads(4);
+		} else {
+			qsim.setNumberOfThreads(1);
+		}
 	}
 
 	private void setPlanSelectionParams() {
@@ -314,12 +401,6 @@ public class ScenarioCreator {
 	 */
 	private void setPlanCalcScoreParams() {
 		final Config config = this.config;
-		config.planCalcScore().setEarlyDeparture_utils_hr(0.0);
-		config.planCalcScore().setLateArrival_utils_hr(0);
-		config.planCalcScore().setMarginalUtilityOfMoney(0.062);
-		config.planCalcScore().setPerforming_utils_hr(0.96);
-		config.planCalcScore().setMarginalUtlOfWaitingPt_utils_hr(-0.18);
-		config.planCalcScore().setUtilityOfLineSwitch(0);
 
 		PlanCalcScoreConfigGroup.ModeParams avCalcScoreParams = new PlanCalcScoreConfigGroup.ModeParams(
 				AVModule.AV_MODE);
@@ -348,9 +429,13 @@ public class ScenarioCreator {
 
 	public void setNumOfVehicles(int numOfVehicles) {
 		this.numOfVehicles = numOfVehicles;
-		if (this.avConfig != null) {
-			GeneratorConfig generator = getOperatorConfig().getGeneratorConfig();
-			generator.setNumberOfVehicles(numOfVehicles);
+		if (this.vehicleConfig != null) {
+			if (this.isAVDispatcher) {
+				GeneratorConfig generator = getOperatorConfig().getGeneratorConfig();
+				generator.setNumberOfVehicles(numOfVehicles);
+			} else {
+				createVehiclesFile();
+			}
 		}
 	}
 
@@ -369,7 +454,7 @@ public class ScenarioCreator {
 
 	public void setDispatchPeriod(int dispatchPeriod) {
 		this.dispatchPeriod = dispatchPeriod;
-		if (this.avConfig != null) {
+		if (this.vehicleConfig != null) {
 			OperatorConfig operator = getOperatorConfig();
 			operator.getDispatcherConfig().addParam("dispatchPeriod", String.valueOf(this.dispatchPeriod));
 		}
@@ -385,7 +470,7 @@ public class ScenarioCreator {
 					+ "The known algorithms are: " + Arrays.deepToString(DISPATCHING_ALGORITHMS));
 		}
 		this.dispatcherAlgorithm = dispatcherAlgorithm;
-		if (this.avConfig != null) {
+		if (this.vehicleConfig != null) {
 			OperatorConfig operator = getOperatorConfig();
 			operator.getDispatcherConfig().setType(dispatcherAlgorithm);
 		}
@@ -413,8 +498,14 @@ public class ScenarioCreator {
 		this.numOfAvenues = numOfAvenues;
 		this.addNetworkIfMissing(true);
 	}
+	
+	public String getConfigPath() {
+		return this.scenarioDir.resolve(SCENARIO_CONFIG_FILENAME).toString();
+	}
 
 	private OperatorConfig getOperatorConfig() {
-		return avConfig.getOperatorConfigs().values().iterator().next();
+		if (this.isAVDispatcher)
+			return ((AVConfigGroup) vehicleConfig).getOperatorConfigs().values().iterator().next();
+		return null;
 	}
 }

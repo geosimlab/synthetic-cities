@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>drt</artifactId>
-			<version>12.0-2020w02-avoev.0</version>
+			<version>11.0</version>
 		</dependency>
   </dependencies>
 </project>
