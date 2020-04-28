@@ -4,45 +4,56 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.matsim.contrib.drt.run.DrtConfigGroup;
-import org.matsim.contrib.drt.run.DrtControlerCreator;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.Controler;
-import org.matsim.vis.otfvis.OTFVisConfigGroup;
-
-import ch.ethz.idsc.amod.ScenarioPreparer;
-import ch.ethz.idsc.amod.ScenarioServer;
+import syncity.scenarios.AmodScenarioCreator;
+import syncity.scenarios.DrtScenarioCreator;
 
 public class SimulationRunner {
 
-	private static final int RUN_ID = 4;
+	private static final int RUN_ID = 5;
+	
+	public static void run(Path workdir) throws Exception {
+		
+		workdir = workdir.resolve(String.valueOf(RUN_ID));
+		
+		final int popSize = 400;
+		final int numOfSt = 20;
+		final int numOfAv = 20;
+		final int vhiclesNum = 80;
+		final int iterations = 1;
 
+		// Drt Scenario
+		for (String algorithm : DrtScenarioCreator.getDispatchigAlgorithms()) {
+			boolean rebalance = true;
+			boolean enableRejection = false;
+			Path algoDirPath = workdir.resolve(algorithm);
+			if (!algoDirPath.toFile().exists())
+				Files.createDirectories(algoDirPath);
+			DrtScenarioCreator scenario = new DrtScenarioCreator(
+					null, algoDirPath.toString(), popSize, numOfSt, numOfAv, 
+					vhiclesNum, iterations, algorithm, rebalance, enableRejection);
+			scenario.prepare();
+			scenario.run();
+		}
+		// Amod Scenarios
+		for (String algorithm : AmodScenarioCreator.getDispatchigAlgorithms()) {
+			int dispatchPeriod = 15;
+			Path algoDirPath = workdir.resolve(algorithm);
+			if (!algoDirPath.toFile().exists())
+				Files.createDirectories(algoDirPath);
+			AmodScenarioCreator scenario = new AmodScenarioCreator(
+					null, algoDirPath.toString(), popSize, numOfSt, numOfAv, 
+					vhiclesNum, iterations, algorithm, dispatchPeriod);
+			scenario.prepare();
+			scenario.run();
+		}
+	}
+	
 	public static void main(String[] args) throws Exception {
 		Path workdir = Paths.get(".").toAbsolutePath();
 		if (args.length > 0) {
 			workdir = Paths.get(args[0]).toAbsolutePath();
 		}
-		workdir = workdir.resolve(String.valueOf(RUN_ID));
-
-		for (String algorithm : ScenarioCreator.DISPATCHING_ALGORITHMS) {
-			Path algoDirPath = workdir.resolve(algorithm);
-			if (!algoDirPath.toFile().exists())
-				Files.createDirectories(algoDirPath);
-			ScenarioCreator scenario = new ScenarioCreator(algoDirPath.toString(), 400, 20, 20, algorithm);
-			scenario.setAllConfigParams();
-			scenario.writeScenarioFiles();
-			if (algorithm.equals(ScenarioCreator.DRT_DISPATCHER)) {
-				Config conf = ConfigUtils.loadConfig(scenario.getConfigPath(), new DrtConfigGroup(),
-						new DvrpConfigGroup(), new OTFVisConfigGroup());
-				Controler controler = DrtControlerCreator.createControlerWithSingleModeDrt(conf, false);
-				controler.run();
-			} else {
-				ScenarioPreparer.run(algoDirPath.toFile());
-				ScenarioServer.simulate(algoDirPath.toFile());
-			}
-		}
+		run(workdir);
 	}
 
 }
