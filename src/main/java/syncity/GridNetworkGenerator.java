@@ -24,7 +24,7 @@ public class GridNetworkGenerator {
 	// capacity at all links
 	private static final long DEFAULT_CAPACITY = 1800; // [veh/h]
 	// default link length for all links
-	private static final int DEFAULT_LINK_LENGTH = 100; // [m]
+	private static final int DEFAULT_LINK_LENGTH = 400; // [m]
 	// default num of Streets (north-south) and avenues (east-west) in the grid
 	private static final int DEFALUT_STREETS_NUM = 50;
 	private static final int DEFAULT_AVENUES_NUM = 50;
