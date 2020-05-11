@@ -92,7 +92,7 @@ public class AmodScenarioCreator extends BaseScenarioCreator{
 	}
 	
 	@Override
-	protected int getNumberOfProcessors() {
+	protected int getNumberOfThreads() {
 		return 4;
 	}
 

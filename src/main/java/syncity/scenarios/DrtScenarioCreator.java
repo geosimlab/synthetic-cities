@@ -50,7 +50,7 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 		return Arrays.copyOf(DISPATCHING_ALGORITHMS, DISPATCHING_ALGORITHMS.length);
 	}
 	
-	protected int getNumberOfProcessors() {
+	protected int getNumberOfThreads() {
 		return 1;
 	}
 	
@@ -92,7 +92,7 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 		DrtConfigGroup drtConfigGroup = new DrtConfigGroup();
 		// We use av so we'll be able to use the same plans for DRT and AV
 		drtConfigGroup.setMode(BaseScenarioCreator.LEG_MODE);
-		drtConfigGroup.setOperationalScheme(OperationalScheme.door2door.toString());;
+//		drtConfigGroup.setOperationalScheme(OperationalScheme.door2door.toString());;
 		drtConfigGroup.setMaxTravelTimeAlpha(1.3);
 		drtConfigGroup.setMaxTravelTimeBeta(1200);
 		drtConfigGroup.setMaxWaitTime(1200);

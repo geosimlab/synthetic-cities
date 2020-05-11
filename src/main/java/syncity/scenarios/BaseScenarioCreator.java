@@ -275,7 +275,7 @@ public abstract class BaseScenarioCreator {
 		qsim.setStartTime(0);
 		qsim.setEndTime(30 * 3600);
 		qsim.setSimStarttimeInterpretation(QSimConfigGroup.StarttimeInterpretation.onlyUseStarttime);
-		qsim.setNumberOfThreads(getNumberOfProcessors());
+		qsim.setNumberOfThreads(getNumberOfThreads());
 	}
 	
 	protected void checkConsistency() {
@@ -287,7 +287,7 @@ public abstract class BaseScenarioCreator {
 	// Setter and Getters
 	//////////////////////////////////////////////////////////
 
-	protected abstract int getNumberOfProcessors();
+	protected abstract int getNumberOfThreads();
 	
 	public int getNumOfVehicles() {
 		return numOfVehicles;
@@ -341,7 +341,7 @@ public abstract class BaseScenarioCreator {
 		return getScenarioDir().resolve(SCENARIO_CONFIG_FILENAME);
 	}
 	
-	protected Config getConfig() {
+	public Config getConfig() {
 		return config;
 	}
 }
