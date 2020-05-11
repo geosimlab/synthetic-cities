@@ -158,6 +158,10 @@ public class RandomPopulationGenerator {
 	private void createPlanToPerson(Node[] nodes, Node homeNode, Person person) {
 		PopulationFactory populationFactory = population.getFactory();
 		int workNodeId = uniformSampler.nextInt(nodes.length);
+		if (nodes[workNodeId] == homeNode) {
+			// prevent home and work being the same node (causes Error)
+			workNodeId = (workNodeId + 1) % nodes.length;
+		}
 		float leaveHome = this.randInWindow(this.leaveHomeTime, this.leaveHomeWindowSize);
 		float leaveWork = leaveHome + this.randInWindow(this.workdayLength, this.workdayWindowSize);
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, nodes[workNodeId], leaveWork);
