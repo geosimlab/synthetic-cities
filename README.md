@@ -20,4 +20,4 @@ The Geo SimLab repository. For more info contact:
 - `amod` doen't have a maven repo. download from this [commit link][1]
  
  
-[1]: https://github.com/amodeus-science/amod/blob/f80ba30884ac3c50af4cca9eef155a963f273ada
+[1]: https://github.com/amodeus-science/amod/tree/f80ba30884ac3c50af4cca9eef155a963f273ada
