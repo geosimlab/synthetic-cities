@@ -9,7 +9,7 @@ The Geo SimLab repository. For more info contact:
 2. Import to eclipse as a maven project
 3. Download `amod` 1.9.1*
 4. Import your amod as well
-5. Set the parameters in the [SimulationRunner](SimulationRunner.java) class and run it :)
+5. Set the parameters in the [SimulationRunner](src/main/java/syncity/SimulationRunner.java) class and run it :)
  
 ### FAQ
 - Eclipse might recognize the `src` folder as your root package: 
