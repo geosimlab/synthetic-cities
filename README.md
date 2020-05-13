@@ -7,11 +7,11 @@ The Geo SimLab repository. For more info contact:
 ## Installation
 1. Clone the repository
 2. Import to eclipse as a maven project
-3. Download `amod` 1.9.1*
+3. Download `amod` 1.9.1 (check the FAQ)
 4. Import your amod as well
 5. Set the parameters in the [SimulationRunner](src/main/java/syncity/SimulationRunner.java) class and run it :)
  
-### FAQ
+#### FAQ
 - Eclipse might recognize the `src` folder as your root package: 
   - `Right-click` the project 
   - Choose `Build Path`->`Configure Build Path`
