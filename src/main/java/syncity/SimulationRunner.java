@@ -11,8 +11,9 @@ import syncity.scenarios.DrtScenarioCreator;
 
 public class SimulationRunner {
 
-	private static final int RUN_ID = 12;
-	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
+	private static final int RUN_ID = 13;
+	private static final String SINGLE_DISPATCHER = null;
+	private static final String[] SKIP_DISPATCHERS = {"HighCapacityDispatcher", "TShareDispatcher"};
 	
 	public static void run(Path workdir) throws Exception {
 		
@@ -25,13 +26,16 @@ public class SimulationRunner {
 		final int popSize = 1600;
 		final int numOfSt = 20;
 		final int numOfAv = 20;
-		final int vehiclesNum = 80;
+		final int vehiclesNum = 320;
 		final int iterations = 20;
 
 		// Drt Scenario
 		for (String algorithm : DrtScenarioCreator.getDispatchigAlgorithms()) {
 			if (SINGLE_DISPATCHER != null && !SINGLE_DISPATCHER.equals(algorithm))
 				continue;
+			if (SKIP_DISPATCHERS != null && stringInArray(SKIP_DISPATCHERS, algorithm))
+				continue;
+			
 			boolean rebalance = true;
 			boolean enableRejection = false;
 			
@@ -42,7 +46,7 @@ public class SimulationRunner {
 					null, algoDirPath.toString(), popSize, numOfSt, numOfAv, 
 					vehiclesNum, iterations, algorithm, rebalance, enableRejection);
 			
-			additionalSetup(scenario.getConfig());
+//			additionalSetup(scenario.getConfig());
 			scenario.prepare();
 			scenario.run();
 		}
@@ -51,8 +55,11 @@ public class SimulationRunner {
 		for (String algorithm : AmodScenarioCreator.getDispatchigAlgorithms()) {
 			if (SINGLE_DISPATCHER != null && !SINGLE_DISPATCHER.equals(algorithm))
 				continue;
-			int dispatchPeriod = 15;
 			
+			if (SKIP_DISPATCHERS != null && stringInArray(SKIP_DISPATCHERS, algorithm))
+				continue;
+			
+			int dispatchPeriod = 15;
 			Path algoDirPath = workdir.resolve(algorithm);
 			if (!algoDirPath.toFile().exists())
 				Files.createDirectories(algoDirPath);
@@ -60,7 +67,7 @@ public class SimulationRunner {
 					null, algoDirPath.toString(), popSize, numOfSt, numOfAv, 
 					vehiclesNum, iterations, algorithm, dispatchPeriod);
 			
-			additionalSetup(scenario.getConfig());
+//			additionalSetup(scenario.getConfig());
 			scenario.prepare();
 			scenario.run();
 		}
@@ -69,6 +76,13 @@ public class SimulationRunner {
 	public static void additionalSetup(Config config) {
 		config.qsim().setStartTime(6 * 3600);
 		config.qsim().setEndTime(12 * 3600);
+	}
+	
+	public static boolean stringInArray(String[] arr, String name) {
+		for (String string : arr) {
+			if (string.equals(name)) return true;
+		}
+		return false;
 	}
 	
 	public static void main(String[] args) throws Exception {
