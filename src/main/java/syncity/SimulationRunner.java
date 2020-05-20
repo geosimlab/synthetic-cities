@@ -11,9 +11,9 @@ import syncity.scenarios.DrtScenarioCreator;
 
 public class SimulationRunner {
 
-	private static final int RUN_ID = 13;
-	private static final String SINGLE_DISPATCHER = null;
-	private static final String[] SKIP_DISPATCHERS = {"HighCapacityDispatcher", "TShareDispatcher"};
+	private static final int RUN_ID = 100;
+	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
+	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
 	
 	public static void run(Path workdir) throws Exception {
 		
@@ -22,12 +22,13 @@ public class SimulationRunner {
 			System.out.println("Work directory already exists, change RUN_ID");
 			return;
 		}
+        
+		final int popSize = 800;
+		final int vehiclesNum = 160;
+		final int iterations = 3;
 		
-		final int popSize = 1600;
 		final int numOfSt = 20;
 		final int numOfAv = 20;
-		final int vehiclesNum = 320;
-		final int iterations = 20;
 
 		// Drt Scenario
 		for (String algorithm : DrtScenarioCreator.getDispatchigAlgorithms()) {
