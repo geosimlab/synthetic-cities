@@ -11,23 +11,25 @@ import syncity.scenarios.DrtScenarioCreator;
 
 public class SimulationRunner {
 
-	private static final int RUN_ID = 13;
-	private static final String SINGLE_DISPATCHER = null;
-	private static final String[] SKIP_DISPATCHERS = {"HighCapacityDispatcher", "TShareDispatcher"};
+	private static final int RUN_ID = 100;
+	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
+	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
 	
-	public static void run(Path workdir) throws Exception {
+	protected int popSize = 800;
+	protected int vehiclesNum = 160;
+	protected int iterations = 3;
+	protected int numOfSt = 20;
+	protected int numOfAv = 20;
+	
+	public void run(Path workdir) throws Exception {
 		
 		workdir = workdir.resolve(String.valueOf(RUN_ID));
 		if (workdir.toFile().exists()) {
 			System.out.println("Work directory already exists, change RUN_ID");
 			return;
 		}
+        
 		
-		final int popSize = 1600;
-		final int numOfSt = 20;
-		final int numOfAv = 20;
-		final int vehiclesNum = 320;
-		final int iterations = 20;
 
 		// Drt Scenario
 		for (String algorithm : DrtScenarioCreator.getDispatchigAlgorithms()) {
@@ -90,7 +92,7 @@ public class SimulationRunner {
 		if (args.length > 0) {
 			workdir = Paths.get(args[0]).toAbsolutePath();
 		}
-		run(workdir);
+		new SimulationRunner().run(workdir);
 	}
 
 }
