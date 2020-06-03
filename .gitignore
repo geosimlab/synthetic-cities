@@ -1,8 +1,14 @@
+# out put dir
 /output/
-/target/
-/bin/
+
+# eclipse files
 .classpath
 .project
 .settings/
+/bin/
+/target/
+
+# PyCharm cache
 .ipynb_checkpoints/
 .idea/
+__pycache__/
