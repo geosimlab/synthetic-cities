@@ -11,7 +11,7 @@ import syncity.scenarios.DrtScenarioCreator;
 
 public class SimulationRunner {
 
-	private static final int RUN_ID = 100;
+	private static final String RUN_ID = "100";
 	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
 	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
 	
