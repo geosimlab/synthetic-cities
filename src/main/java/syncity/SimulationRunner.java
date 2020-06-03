@@ -15,7 +15,13 @@ public class SimulationRunner {
 	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
 	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
 	
-	public static void run(Path workdir) throws Exception {
+	protected int popSize = 800;
+	protected int vehiclesNum = 160;
+	protected int iterations = 3;
+	protected int numOfSt = 20;
+	protected int numOfAv = 20;
+	
+	public void run(Path workdir) throws Exception {
 		
 		workdir = workdir.resolve(String.valueOf(RUN_ID));
 		if (workdir.toFile().exists()) {
@@ -23,12 +29,7 @@ public class SimulationRunner {
 			return;
 		}
         
-		final int popSize = 800;
-		final int vehiclesNum = 160;
-		final int iterations = 3;
 		
-		final int numOfSt = 20;
-		final int numOfAv = 20;
 
 		// Drt Scenario
 		for (String algorithm : DrtScenarioCreator.getDispatchigAlgorithms()) {
@@ -91,7 +92,7 @@ public class SimulationRunner {
 		if (args.length > 0) {
 			workdir = Paths.get(args[0]).toAbsolutePath();
 		}
-		run(workdir);
+		new SimulationRunner().run(workdir);
 	}
 
 }
