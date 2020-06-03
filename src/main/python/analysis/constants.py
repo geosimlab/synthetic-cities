@@ -1,6 +1,5 @@
 DRT_NAME = "DRT"
 
-
 COL_TO_COLOR = {
     "4 pax": "dodgerblue",
     "3 pax": "lime",
