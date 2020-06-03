@@ -17,7 +17,7 @@ def get_drt_occupancy_stats(alg_path):
 
 def get_amod_occupancy_stats(alg_path):
     """ reads amod occupancy stats add column names and a time columns"""
-    full_path = os.path.join(alg_path, "output","data","statusDistributionNumPassengers")
+    full_path = os.path.join(alg_path, "output", "data", "statusDistributionNumPassengers")
     columns = ['4 pax', '3 pax', '2 pax', '1 pax', '0 pax', 'rebalance', 'stay', 'off-service']
     df = files.read_amod_csv(full_path)
     col_num = len(df.columns)
