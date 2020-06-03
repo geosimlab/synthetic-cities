@@ -49,6 +49,11 @@ def _get_column_names(dirpath):
     return cols
 
 
+def get_amod_csv_path(alg_path, csv_name):
+    sub_dirs = ("output", "data")
+    return os.path.join(alg_path, *sub_dirs, csv_name)
+
+
 def read_amod_csv(fname, default_columns=None):
     """ read amod csv file, add columns according to description.csv if exists """
     if os.path.isdir(fname):

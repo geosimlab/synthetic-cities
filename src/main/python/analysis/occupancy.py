@@ -6,7 +6,7 @@ import constants
 import files
 
 
-def get_drt_occupancy_stats(alg_path):
+def _get_occupancy_stats_drt(alg_path):
     """ reads the DRT occupancy data and replace the time column with timedelta"""
     fname = "drt_occupancy_time_profiles_av.txt"
     full_path = files.get_last_iter_file(alg_path, fname)
@@ -15,7 +15,7 @@ def get_drt_occupancy_stats(alg_path):
     return df
 
 
-def get_amod_occupancy_stats(alg_path):
+def _get_occupancy_stats_amod(alg_path):
     """ reads amod occupancy stats add column names and a time columns"""
     full_path = os.path.join(alg_path, "output", "data", "statusDistributionNumPassengers")
     columns = ['4 pax', '3 pax', '2 pax', '1 pax', '0 pax', 'rebalance', 'stay', 'off-service']
@@ -39,9 +39,9 @@ def get_ocucpancy_aggregation(alg_path):
     """ reads the occupanct info and return a stacked graph of the data"""
     alg = os.path.basename(alg_path)
     if files.is_drt(alg_path):
-        df = get_drt_occupancy_stats(alg_path)
+        df = _get_occupancy_stats_drt(alg_path)
     else:
-        df = get_amod_occupancy_stats(alg_path)
+        df = _get_occupancy_stats_amod(alg_path)
 
     morning_means = _percent_in_window(df, "6hr", "9hr")
     evening_means = _percent_in_window(df, "15hr", "18hr")
@@ -53,9 +53,9 @@ def get_occupancy_graphs(alg_path):
     cols = ['4 pax', '3 pax', '2 pax', '1 pax', '0 pax', 'rebalance', 'stay']
     alg = os.path.basename(alg_path)
     if files.is_drt(alg_path):
-        df = get_drt_occupancy_stats(alg_path)
+        df = _get_occupancy_stats_drt(alg_path)
     else:
-        df = get_amod_occupancy_stats(alg_path)
+        df = _get_occupancy_stats_amod(alg_path)
 
     cols = [c for c in cols if c in df.columns]
     ax = df.plot.area(stacked=True,
