@@ -1,9 +1,16 @@
 package syncity;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.random.JDKRandomGenerator;
@@ -43,22 +50,23 @@ import org.matsim.core.scenario.ScenarioUtils;
  */
 public class RandomPopulationGenerator {
 
-	private final static int SECONDS_IN_HOUR = 3600;
-	private final static int CONSTANT_SEED = 504000;
+	protected final static int SECONDS_IN_HOUR = 3600;
+	protected final static int CONSTANT_SEED = 504000;
 
-	private final JDKRandomGenerator uniformSampler;
+	protected final JDKRandomGenerator uniformSampler;
 	@SuppressWarnings("unused")
-	private final PoissonDistribution poissonSampler;
+	protected final PoissonDistribution poissonSampler;
 
 	// counter to be used as person id, increment every time
-	private int personId = 1;
-	private int popSize;
-	private float leaveHomeTime = 6;
-	private float leaveHomeWindowSize = 3;
-	private float workdayLength = 6;
-	private float workdayWindowSize = 4;
-	private Network network;
-	private Population population;
+	protected int personId = 1;
+	protected int popSize;
+	protected float leaveHomeTime = 6;
+	protected float leaveHomeWindowSize = 3;
+	protected float workdayLength = 6;
+	protected float workdayWindowSize = 4;
+	protected Network network;
+	protected Population population;
+	protected HashMap<Id<Person>, List<Double>> distanceDistribution;
 
 	public RandomPopulationGenerator(Config config, Network network, int popSize) {
 		if (network == null) {
@@ -74,6 +82,7 @@ public class RandomPopulationGenerator {
 		this.popSize = popSize;
 		float avgPeopleInNode = popSize / (float) network.getNodes().size();
 		this.network = network;
+		this.distanceDistribution = new HashMap<>();
 		this.population = PopulationUtils.createPopulation(config, network);
 		this.uniformSampler = new JDKRandomGenerator(CONSTANT_SEED);
 		this.poissonSampler = new PoissonDistribution(uniformSampler, avgPeopleInNode,
@@ -113,7 +122,25 @@ public class RandomPopulationGenerator {
 
 		// write network
 		new PopulationWriter(population).write(out.toString());
+		writeDistanceInfo(out);
 		return out.toAbsolutePath().toString();
+	}
+	
+	protected void writeDistanceInfo(Path populationFileName) throws IOException {
+		String out = populationFileName + ".DistanceInfo.csv";
+		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(out)));
+		String header = "PersonId,O-D Distance [m] \n";
+		writer.write(header);
+		for (Entry<Id<Person>, List<Double>> entry : this.distanceDistribution.entrySet()) {
+			String key = entry.getKey().toString();
+			for (double dist : entry.getValue()) {
+				String line = key + "," + dist + "\n";
+				writer.write(line);
+			}
+		}
+		writer.close();
+		System.out.println(out);
+		System.out.println("!!!!!! Wrote Distances !!!!!!!!!");
 	}
 
 	private String getTitle() {
@@ -155,7 +182,7 @@ public class RandomPopulationGenerator {
 	 * @param homeNode the home node for that person
 	 * @param person   the person to add the plan on
 	 */
-	private void createPlanToPerson(Node[] nodes, Node homeNode, Person person) {
+	protected void createPlanToPerson(Node[] nodes, Node homeNode, Person person) {
 		PopulationFactory populationFactory = population.getFactory();
 		int workNodeId = uniformSampler.nextInt(nodes.length);
 		if (nodes[workNodeId] == homeNode) {
@@ -166,6 +193,14 @@ public class RandomPopulationGenerator {
 		float leaveWork = leaveHome + this.randInWindow(this.workdayLength, this.workdayWindowSize);
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, nodes[workNodeId], leaveWork);
 		person.addPlan(plan);
+		updateDistanceMap(person.getId(), homeNode, nodes[workNodeId]);
+	}
+	
+	protected void updateDistanceMap(Id<Person> id, Node homeNode, Node workNode) {
+		double xDistance = homeNode.getCoord().getX() - workNode.getCoord().getX(); 
+		double yDistance = homeNode.getCoord().getY() - workNode.getCoord().getY();
+		double distance = Math.hypot(xDistance, yDistance);
+		this.distanceDistribution.put(id, Arrays.asList(distance));
 	}
 
 	/**
@@ -175,7 +210,7 @@ public class RandomPopulationGenerator {
 	 * @param window the size of the random window
 	 * @return a random number within the window
 	 */
-	private float randInWindow(float base, float window) {
+	protected float randInWindow(float base, float window) {
 		return base + (window * uniformSampler.nextFloat());
 	}
 
@@ -200,7 +235,7 @@ public class RandomPopulationGenerator {
 	 * @param leaveWorkTime     time to leave work (in hours 0-24)
 	 * @return the created plan
 	 */
-	private static Plan createHomeWorkHomePlan(PopulationFactory populationFactory, Node homeNode, float leaveHomeTime,
+	protected static Plan createHomeWorkHomePlan(PopulationFactory populationFactory, Node homeNode, float leaveHomeTime,
 			Node workNode, float leaveWorkTime) {
 
 		Plan plan = populationFactory.createPlan();
