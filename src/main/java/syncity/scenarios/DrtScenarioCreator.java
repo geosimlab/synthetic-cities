@@ -9,8 +9,8 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.drt.optimizer.rebalancing.mincostflow.MinCostFlowRebalancingParams;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
-import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
 import org.matsim.contrib.drt.run.DrtControlerCreator;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicleSpecification;
 import org.matsim.contrib.dvrp.fleet.FleetWriter;
@@ -63,13 +63,13 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 
 	private String createVehiclesFile() {
 		int seatsPerVehicle = 4; //this is important for DRT, value is not used by taxi
-		double operationStartTime = getConfig().qsim().getStartTime();;
-		double operationEndTime = getConfig().qsim().getEndTime();
+		double operationStartTime = getConfig().qsim().getStartTime().orElse(0);
+		double operationEndTime = getConfig().qsim().getEndTime().orElse(30 * 3600);
 		Random random = MatsimRandom.getRandom();
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 		final int[] i = {0};
-		final String allowedMode = BaseScenarioCreator.ALLOWED_LINK_MODE;
+		final String allowedMode = BaseScenarioCreator.ALLOWED_LINK_MODE; 
 		Stream<DvrpVehicleSpecification> vehicleSpecificationStream = scenario.getNetwork().getLinks().entrySet().stream()
 				.filter(entry -> entry.getValue().getAllowedModes().contains(allowedMode)) // drt can only start on links with Transport mode 'car'
 				.sorted((e1, e2) -> (random.nextInt(2) - 1)) // shuffle links
@@ -89,14 +89,15 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 
 	@Override
 	protected void addDispatcherConfigGroup() {
-		DrtConfigGroup drtConfigGroup = new DrtConfigGroup();
+		MultiModeDrtConfigGroup multiDRT = new MultiModeDrtConfigGroup();
+		DrtConfigGroup drtConfigGroup = (DrtConfigGroup) multiDRT.createParameterSet(DrtConfigGroup.GROUP_NAME);
 		// We use av so we'll be able to use the same plans for DRT and AV
 		drtConfigGroup.setMode(BaseScenarioCreator.LEG_MODE);
 //		drtConfigGroup.setOperationalScheme(OperationalScheme.door2door.toString());;
 		drtConfigGroup.setMaxTravelTimeAlpha(1.3);
 		drtConfigGroup.setMaxTravelTimeBeta(1200);
 		drtConfigGroup.setMaxWaitTime(1200);
-		drtConfigGroup.setRequestRejection(this.enableRejection);
+		drtConfigGroup.setRejectRequestIfMaxWaitOrTravelTimeViolated(enableRejection);
 		drtConfigGroup.setStopDuration(60.0);
 		String vehiclesFile = createVehiclesFile();
 		drtConfigGroup.setVehiclesFile(vehiclesFile);
@@ -110,10 +111,8 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 			drtConfigGroup.addParameterSet(rebalance);
 		}
 		
-//		MultiModeDrtConfigGroup multiDrt = new MultiModeDrtConfigGroup();
-//		multiDrt.addParameterSet(drtConfigGroup);
-//		config.addModule(multiDrt);
-		config.addModule(drtConfigGroup); 
+		multiDRT.addParameterSet(drtConfigGroup);
+		config.addModule(multiDRT); 
 		DvrpConfigGroup dvrp = new DvrpConfigGroup();
 		config.addModule(dvrp);
 		OTFVisConfigGroup otfvis = new OTFVisConfigGroup();

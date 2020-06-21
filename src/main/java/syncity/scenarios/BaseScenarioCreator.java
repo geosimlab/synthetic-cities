@@ -30,7 +30,7 @@ public abstract class BaseScenarioCreator {
 	protected static final String SCENARIO_CONFIG_FILENAME = "generated_config.xml";
 	protected static final String OUTPUT_DIR = "output";
 	protected static final String SCENARIO_BASE_DIR = "ScenarioBaseFiles/";
-	protected static final String ALLOWED_LINK_MODE = TransportMode.car;
+	protected static final String ALLOWED_LINK_MODE = TransportMode.car; // drt can only start on links with Transport mode 'car'
 	protected static final String LEG_MODE = AVModule.AV_MODE;
 	
 	protected abstract String[] getScenarioTemplateFiles();
