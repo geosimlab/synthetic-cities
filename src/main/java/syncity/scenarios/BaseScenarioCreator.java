@@ -19,7 +19,6 @@ import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 
-import ch.ethz.matsim.av.framework.AVModule;
 import syncity.GridNetworkGenerator;
 import syncity.RandomPopulationGenerator;
 
@@ -31,7 +30,7 @@ public abstract class BaseScenarioCreator {
 	protected static final String OUTPUT_DIR = "output";
 	protected static final String SCENARIO_BASE_DIR = "ScenarioBaseFiles/";
 	protected static final String ALLOWED_LINK_MODE = TransportMode.car; // drt can only start on links with Transport mode 'car'
-	protected static final String LEG_MODE = AVModule.AV_MODE;
+	protected static final String LEG_MODE = "av"; 
 	
 	protected abstract String[] getScenarioTemplateFiles();
 	protected abstract void addDispatcherConfigGroup();
