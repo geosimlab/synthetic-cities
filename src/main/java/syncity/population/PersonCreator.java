@@ -53,8 +53,8 @@ public class PersonCreator {
 	 */
 	protected static Plan createPlanToPerson(Node homeNode, Node WorkNode, Population population) {
 		PopulationFactory populationFactory = population.getFactory();
-		float leaveHome = Utils.randInWindow(leaveHomeTime, leaveHomeWindowSize);
-		float leaveWork = leaveHome + Utils.randInWindow(workdayLength, workdayWindowSize);
+		double leaveHome = Utils.randInWindow(leaveHomeTime, leaveHomeWindowSize);
+		double leaveWork = leaveHome + Utils.randInWindow(workdayLength, workdayWindowSize);
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, WorkNode, leaveWork);
 		return plan;
 	}
@@ -65,33 +65,33 @@ public class PersonCreator {
 	 * 
 	 * @param populationFactory matsim population factory
 	 * @param homeNode          the home node
-	 * @param leaveHomeTime     time to leave home (in hours 0-24)
+	 * @param leaveHome     time to leave home (in hours 0-24)
 	 * @param workNode          the work node
-	 * @param leaveWorkTime     time to leave work (in hours 0-24)
+	 * @param leaveWork     time to leave work (in hours 0-24)
 	 * @return the created plan
 	 */
-	protected static Plan createHomeWorkHomePlan(PopulationFactory populationFactory, Node homeNode, float leaveHomeTime,
-			Node workNode, float leaveWorkTime) {
+	protected static Plan createHomeWorkHomePlan(PopulationFactory populationFactory, Node homeNode, double leaveHome,
+			Node workNode, double leaveWork) {
 
 		Plan plan = populationFactory.createPlan();
 		Link homeLink = homeNode.getInLinks().values().iterator().next();
 		Link workLink = workNode.getInLinks().values().iterator().next();
 
 		Activity morningActivity = populationFactory.createActivityFromLinkId(HOME_ACTIVITY_TYPE, homeLink.getId());
-		morningActivity.setEndTime(leaveHomeTime * SECONDS_IN_HOUR);
+		morningActivity.setEndTime(leaveHome * SECONDS_IN_HOUR);
 		plan.addActivity(morningActivity); // add the Activity to the Plan
 
 		Leg leg = populationFactory.createLeg("av");
-		leg.setDepartureTime(leaveHomeTime * SECONDS_IN_HOUR);
+		leg.setDepartureTime(leaveHome * SECONDS_IN_HOUR);
 		plan.addLeg(leg);
 
 		Activity WorkActivity = populationFactory.createActivityFromLinkId(WORK_ACTIVITY_TYPE, workLink.getId());
-		WorkActivity.setStartTime(leaveHomeTime * SECONDS_IN_HOUR);
-		WorkActivity.setEndTime(leaveWorkTime * SECONDS_IN_HOUR);
+		WorkActivity.setStartTime(leaveHome * SECONDS_IN_HOUR);
+		WorkActivity.setEndTime(leaveWork * SECONDS_IN_HOUR);
 		plan.addActivity(WorkActivity);
 
 		leg = populationFactory.createLeg("av");
-		leg.setDepartureTime(leaveWorkTime * SECONDS_IN_HOUR);
+		leg.setDepartureTime(leaveWork * SECONDS_IN_HOUR);
 		plan.addLeg(leg);
 
 		Activity eveningActivity = populationFactory.createActivityFromLinkId(HOME_ACTIVITY_TYPE, homeLink.getId());

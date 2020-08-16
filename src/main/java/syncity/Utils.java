@@ -23,8 +23,19 @@ public class Utils {
 	 * @param window the size of the random window
 	 * @return a random number within the window
 	 */
-	public static float randInWindow(float base, float window) {
-		return base + (window * getUniformRandomGenerator().nextFloat());
+	public static double randInWindow(double base, double window) {
+		return base + (window * getUniformRandomGenerator().nextDouble());
+	}
+	
+	/**
+	 * return a random number between (base - delta) and (base + delta)
+	 * 
+	 * @param base   the base size
+	 * @param delta the size of the random window
+	 * @return a random number within the window
+	 */
+	public static double randAroundBase(double base, double delta) {
+		return randInWindow(base - delta, delta*2);
 	}
 	
 	public static double nodesDistance(Node nodeA, Node nodeB) {

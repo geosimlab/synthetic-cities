@@ -14,6 +14,8 @@ import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.NetworkWriter;
 
+import syncity.Utils;
+
 /**
  * Generate a bidirectional grid
  * 
@@ -24,15 +26,18 @@ public class GridNetworkGenerator {
 	// capacity at all links
 	private static final long DEFAULT_CAPACITY = 1800; // [veh/h]
 	// default link length for all links
-	private static final int DEFAULT_LINK_LENGTH = 400; // [m]
+	private static final int DEFAULT_LINK_LENGTH = 100; // [m]
+	// default ratio of link length to shoot a node around
+	private static final double DEFAULT_SHOOT_RATIO = 0.4; // [m]
 	// default num of Streets (north-south) and avenues (east-west) in the grid
-	private static final int DEFALUT_STREETS_NUM = 50;
-	private static final int DEFAULT_AVENUES_NUM = 50;
+	private static final int DEFALUT_STREETS_NUM = 100;
+	private static final int DEFAULT_AVENUES_NUM = 100;
 	// default speed for both streets and avenues
 	private static final double DEFAULT_SPEED = 15; // [km/h]
 	
 	private long capacity;
 	private int linkLength;
+	private double shootNodeDistance;
 	private int numOfStreets;
 	private int numOfAvenues;
 	private double driveSpeedStreets;
@@ -44,6 +49,12 @@ public class GridNetworkGenerator {
 				DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
 	}
 
+	/**
+	 * generate a grid network in the given size, the links are all bidirectional
+	 * 
+	 * @param streetSpeed  vehicles speed in streets (in Km/h)
+	 * @param avenueSpeed  vehicles speed in avenues (in Km/h)
+	 */
 	public GridNetworkGenerator(int numOfStreets, int numOfAvenues) {
 		this(DEFAULT_CAPACITY, numOfStreets, numOfAvenues, 
 				DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
@@ -63,6 +74,7 @@ public class GridNetworkGenerator {
 			double avenueSpeed) {
 		this.capacity = capacity;
 		this.linkLength = linkLength;
+		this.shootNodeDistance = linkLength * DEFAULT_SHOOT_RATIO;
 		this.numOfStreets = numOfStreets;
 		this.numOfAvenues = numOfAvenues;
 		this.driveSpeedStreets = streetSpeed;
@@ -117,14 +129,11 @@ public class GridNetworkGenerator {
 	}
 
 	public void generateGridNetwork() {
-		// create an empty network
-		NetworkFactory fac = this.net.getFactory();
+		
 
 		for (int st = 0; st < this.numOfStreets; ++st) {
 			for (int av = 0; av < this.numOfAvenues; ++av) {
-				// create new node
-				String id = getNodeIdString(st, av);
-				Node newNode = fac.createNode(Id.createNodeId(id), new Coord(st * this.linkLength, av * this.linkLength));
+				Node newNode = createNode(st, av);
 				this.net.addNode(newNode);
 				// connect new node to the previous nodes
 				if (av > 0) {
@@ -137,6 +146,16 @@ public class GridNetworkGenerator {
 				}
 			}
 		}
+	}
+	
+	protected Node createNode(int streetNum, int avenueNum) {
+		NetworkFactory fac = this.net.getFactory();
+		// create new node
+		String idString = getNodeIdString(streetNum, avenueNum);
+		double xCoord = Utils.randAroundBase(streetNum * this.linkLength, shootNodeDistance);
+		double yCoord = Utils.randAroundBase(avenueNum * this.linkLength, shootNodeDistance);
+		Coord coord = new Coord(xCoord, yCoord);
+		return fac.createNode(Id.createNodeId(idString), coord);
 	}
 
 	/**
