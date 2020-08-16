@@ -11,13 +11,13 @@ import syncity.scenarios.DrtScenarioCreator;
 
 public class SimulationRunner {
 
-	private static final String RUN_ID = "100";
-	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
-	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
+	private static final String RUN_ID = "hcrs_reproduce";
+	private static final String SINGLE_DISPATCHER =  "HighCapacityDispatcher";
+	private static final String[] SKIP_DISPATCHERS = {"DRT"};
 	
 	protected int popSize = 800;
-	protected int vehiclesNum = 160;
-	protected int iterations = 3;
+	protected int vehiclesNum = 80;
+	protected int iterations = 1;
 	protected int numOfSt = 20;
 	protected int numOfAv = 20;
 	
