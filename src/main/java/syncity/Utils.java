@@ -33,4 +33,11 @@ public class Utils {
 		double distance = Math.hypot(xDistance, yDistance);
 		return distance;
 	}
+
+	public static <T extends Comparable<T>> boolean arrayContains(T[] arr, T obj) {
+		for (T element : arr) {
+			if (element.equals(obj)) return true;
+		}
+		return false;
+	}
 }
