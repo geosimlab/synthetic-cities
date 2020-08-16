@@ -43,8 +43,22 @@ def _percent_in_window(df, start_time, end_time, time_column="time"):
     times = ((timedelta >= pd.to_timedelta(start_time))
              & (timedelta <= pd.to_timedelta(end_time)))
     cols = _get_filterd_columns_list(df)
+    total_avg = _calc_avg_occupancy(df[times][cols])
     means = df[times][cols].mean(axis=0, numeric_only=True)
-    return means / means.sum()
+    res = means / means.sum()
+    res["avg number of passengers"] = total_avg
+    return res
+
+def _calc_avg_occupancy(df):
+    cols = _get_filterd_columns_list(df)
+    # use only "# pax" columns
+    cols.remove("stay")
+    total_passengers = 0
+    for c in cols:
+        passengers = int(c.split(" ")[0])
+        total_passengers += df[c].sum() * passengers
+    # divide all passengers by the number of non-idle vehicles
+    return total_passengers / df[cols].sum().sum()
 
 
 def get_ocucpancy_aggregation(alg_path):
@@ -57,7 +71,8 @@ def get_ocucpancy_aggregation(alg_path):
 
     morning_means = _percent_in_window(df, "6hr", "9hr")
     evening_means = _percent_in_window(df, "15hr", "18hr")
-    return pd.concat([morning_means, evening_means], keys=["morning", "evening"])
+    res = pd.concat([morning_means, evening_means], keys=["morning", "evening"])
+    return res
 
 
 def get_occupancy_per_hour(alg_path):
