@@ -21,3 +21,11 @@ def get_color(data_name, color_set="deep"):
     palette = sns.color_palette(color_set, n_colors=len(OCCUPANCY_COLS))
     COL_TO_COLOR = dict(zip(OCCUPANCY_COLS, palette))
     return COL_TO_COLOR[data_name]
+
+LONG_TO_SHORT_NAME = {
+    "DRT": "DRT",
+    "DynamicRideSharingStrategy": "DRSS",
+    "ExtDemandSupplyBeamSharing": "Ext-DS",
+    "HighCapacityDispatcher": "HCRS",
+    "TShareDispatcher": "T-Share",
+}
