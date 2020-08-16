@@ -20,7 +20,7 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 
 import ch.ethz.matsim.av.framework.AVModule;
-import syncity.GridNetworkGenerator;
+import syncity.network.GridNetworkGenerator;
 import syncity.population.RandomPopulationGenerator;
 
 public abstract class BaseScenarioCreator {

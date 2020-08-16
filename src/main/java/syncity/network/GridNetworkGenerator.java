@@ -1,4 +1,4 @@
-package syncity;
+package syncity.network;
 
 import java.io.IOException;
 import java.nio.file.Files;
