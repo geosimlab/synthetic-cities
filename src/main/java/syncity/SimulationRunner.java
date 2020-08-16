@@ -12,7 +12,7 @@ import syncity.scenarios.DrtScenarioCreator;
 public class SimulationRunner {
 
 	private static final String RUN_ID = "100";
-	private static final String SINGLE_DISPATCHER = "BeamExtensionForSharing";
+	private static final String SINGLE_DISPATCHER = "ExtDemandSupplyBeamSharing";
 	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
 	
 	protected int popSize = 10000;

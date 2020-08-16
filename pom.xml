@@ -73,12 +73,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>ch.ethz.idsc</groupId>
-			<artifactId>amod</artifactId>
-			<version>${amodeus.version}</version>
-		</dependency>
-
-		<dependency>
 			<!-- Include the JUnit testing library. Not transitive. -->
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
