@@ -8,18 +8,19 @@ import org.matsim.core.config.Config;
 
 import syncity.scenarios.AmodScenarioCreator;
 import syncity.scenarios.DrtScenarioCreator;
+import utils.BasicUtils;
 
 public class SimulationRunner {
 
-	private static final String RUN_ID = "100";
-	private static final String SINGLE_DISPATCHER = "ExtDemandSupplyBeamSharing";
-	private static final String[] SKIP_DISPATCHERS = null; //{"HighCapacityDispatcher", "TShareDispatcher"};
+	private static final String RUN_ID = "Simlab-amod";
+	private static final String SINGLE_DISPATCHER = "HighCapacityDispatcher";
+	private static final String[] SKIP_DISPATCHERS = {"ExtDemandSupplyBeamSharing", "TShareDispatcher", "DynamicRideSharingStrategy"};
 	
-	protected int popSize = 10000;
-	protected int vehiclesNum = 2500;
+	protected int popSize = 800;
+	protected int vehiclesNum = 80;
 	protected int iterations = 1;
-	protected int numOfSt = 100;
-	protected int numOfAv = 100;
+	protected int numOfSt = 20;
+	protected int numOfAv = 20;
 	
 	public void run(Path workdir) throws Exception {
 		
@@ -35,11 +36,11 @@ public class SimulationRunner {
 		for (String algorithm : DrtScenarioCreator.getDispatchigAlgorithms()) {
 			if (SINGLE_DISPATCHER != null && !SINGLE_DISPATCHER.equals(algorithm))
 				continue;
-			if (SKIP_DISPATCHERS != null && Utils.arrayContains(SKIP_DISPATCHERS, algorithm))
+			if (SKIP_DISPATCHERS != null && BasicUtils.arrayContains(SKIP_DISPATCHERS, algorithm))
 				continue;
 			
 			boolean rebalance = true;
-			boolean enableRejection = false;
+			boolean enableRejection = true;
 			
 			Path algoDirPath = workdir.resolve(algorithm);
 			if (!algoDirPath.toFile().exists())
@@ -58,7 +59,7 @@ public class SimulationRunner {
 			if (SINGLE_DISPATCHER != null && !SINGLE_DISPATCHER.equals(algorithm))
 				continue;
 			
-			if (SKIP_DISPATCHERS != null && Utils.arrayContains(SKIP_DISPATCHERS, algorithm))
+			if (SKIP_DISPATCHERS != null && BasicUtils.arrayContains(SKIP_DISPATCHERS, algorithm))
 				continue;
 			
 			int dispatchPeriod = 15;

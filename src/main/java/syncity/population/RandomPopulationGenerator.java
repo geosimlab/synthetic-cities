@@ -25,7 +25,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
-import syncity.Utils;
+import utils.BasicUtils;
 
 /**
  * A class to generate a random (poisson distributed) population in the given
@@ -152,9 +152,9 @@ public class RandomPopulationGenerator {
 	}
 	
 	protected Node getWorkNode(Node[] nodesArray, Node homeNode, double minimumDistance) {
-		int workNodeId = Utils.getUniformRandomGenerator().nextInt(nodesArray.length);
-		while (Utils.nodesDistance(nodesArray[workNodeId], homeNode) < minimumDistance) {
-			workNodeId = Utils.getUniformRandomGenerator().nextInt(nodesArray.length);
+		int workNodeId = BasicUtils.getUniformRandomGenerator().nextInt(nodesArray.length);
+		while (BasicUtils.nodesDistance(nodesArray[workNodeId], homeNode) < minimumDistance) {
+			workNodeId = BasicUtils.getUniformRandomGenerator().nextInt(nodesArray.length);
 		}
 		return nodesArray[workNodeId];
 	}
@@ -184,7 +184,7 @@ public class RandomPopulationGenerator {
 			}
 		}
 		if (homeNode != null && workNode != null) {
-			double distance = Utils.nodesDistance(homeNode, workNode);
+			double distance = BasicUtils.nodesDistance(homeNode, workNode);
 			this.distanceDistribution.put(id, Arrays.asList(distance));
 		}
 	}

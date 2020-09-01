@@ -11,7 +11,7 @@
 	<properties>
 		<matsim.version>11.0</matsim.version>
 		<ethz.matsim.version>1.0.3-matsim11</ethz.matsim.version>
-		<amodeus.version>1.9.1</amodeus.version>
+		<amodeus.version>1.9.1-simlab</amodeus.version>
 	</properties>
 	<build>
 		<sourceDirectory>src</sourceDirectory>

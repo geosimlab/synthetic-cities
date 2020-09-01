@@ -1,9 +1,9 @@
-package syncity;
+package utils;
 
 import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.matsim.api.core.v01.network.Node;
 
-public class Utils {
+public class BasicUtils {
 	
 	protected final static int CONSTANT_SEED = 504000;
 	
@@ -51,4 +51,5 @@ public class Utils {
 		}
 		return false;
 	}
+	
 }

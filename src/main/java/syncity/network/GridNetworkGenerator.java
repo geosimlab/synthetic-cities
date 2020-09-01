@@ -14,7 +14,7 @@ import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.NetworkWriter;
 
-import syncity.Utils;
+import utils.BasicUtils;
 
 /**
  * Generate a bidirectional grid
@@ -152,8 +152,8 @@ public class GridNetworkGenerator {
 		NetworkFactory fac = this.net.getFactory();
 		// create new node
 		String idString = getNodeIdString(streetNum, avenueNum);
-		double xCoord = Utils.randAroundBase(streetNum * this.linkLength, shootNodeDistance);
-		double yCoord = Utils.randAroundBase(avenueNum * this.linkLength, shootNodeDistance);
+		double xCoord = BasicUtils.randAroundBase(streetNum * this.linkLength, shootNodeDistance);
+		double yCoord = BasicUtils.randAroundBase(avenueNum * this.linkLength, shootNodeDistance);
 		Coord coord = new Coord(xCoord, yCoord);
 		return fac.createNode(Id.createNodeId(idString), coord);
 	}

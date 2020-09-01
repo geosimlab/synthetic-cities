@@ -10,7 +10,7 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 
-import syncity.Utils;
+import utils.BasicUtils;
 
 public class PersonCreator {
 
@@ -53,8 +53,8 @@ public class PersonCreator {
 	 */
 	protected static Plan createPlanToPerson(Node homeNode, Node WorkNode, Population population) {
 		PopulationFactory populationFactory = population.getFactory();
-		double leaveHome = Utils.randInWindow(leaveHomeTime, leaveHomeWindowSize);
-		double leaveWork = leaveHome + Utils.randInWindow(workdayLength, workdayWindowSize);
+		double leaveHome = BasicUtils.randInWindow(leaveHomeTime, leaveHomeWindowSize);
+		double leaveWork = leaveHome + BasicUtils.randInWindow(workdayLength, workdayWindowSize);
 		Plan plan = createHomeWorkHomePlan(populationFactory, homeNode, leaveHome, WorkNode, leaveWork);
 		return plan;
 	}
