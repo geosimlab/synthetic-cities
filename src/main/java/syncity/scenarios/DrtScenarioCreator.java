@@ -9,7 +9,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.drt.optimizer.rebalancing.mincostflow.MinCostFlowRebalancingParams;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
-import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
 import org.matsim.contrib.drt.run.DrtControlerCreator;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicleSpecification;
@@ -22,6 +21,8 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
 
+import utils.Structs.TripTimeArguments;
+
 public class DrtScenarioCreator extends BaseScenarioCreator{
 
 	private static final Logger log = Logger.getLogger(DrtScenarioCreator.class);
@@ -29,17 +30,14 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 	private static final String[] SCENARIO_TEMPLATE_FILES = null;
 	private static final String[] DISPATCHING_ALGORITHMS = { "DRT" };
 	
-	private boolean rebalance;
-	private boolean enableRejection;
+	private boolean rebalance = true;
+	private boolean enableRejection = true;
 	private DrtConfigGroup drtConfig;
 	
 	
 	public DrtScenarioCreator(Config baseConfig, String scenarioDirPath, int popSize, int numOfStreets,
-			int numOfAvenues, int numOfVehicles, int numOfIterations, String dispatcherAlgorithm, 
-			boolean rebalance, boolean enableRejection) {
-		super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues, numOfVehicles, numOfIterations, dispatcherAlgorithm);
-		this.rebalance = rebalance;
-		this.enableRejection = enableRejection;
+			int numOfAvenues, int numOfVehicles, int numOfIterations, String dispatcherAlgorithm, TripTimeArguments timeParameters) {
+		super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues, numOfVehicles, numOfIterations, dispatcherAlgorithm, timeParameters);
 	}
 
 	protected String[] getScenarioTemplateFiles() {
@@ -93,11 +91,11 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 		// We use av so we'll be able to use the same plans for DRT and AV
 		drtConfigGroup.setMode(BaseScenarioCreator.LEG_MODE);
 //		drtConfigGroup.setOperationalScheme(OperationalScheme.door2door.toString());;
-		drtConfigGroup.setMaxTravelTimeAlpha(1.3);
-		drtConfigGroup.setMaxTravelTimeBeta(1200);
-		drtConfigGroup.setMaxWaitTime(1200);
+		drtConfigGroup.setMaxTravelTimeAlpha(timeArguments.alpha);
+		drtConfigGroup.setMaxTravelTimeBeta(timeArguments.beta);
+		drtConfigGroup.setMaxWaitTime(timeArguments.maxWaitTime);
+		drtConfigGroup.setStopDuration(timeArguments.stopTime);
 		drtConfigGroup.setRequestRejection(this.enableRejection);
-		drtConfigGroup.setStopDuration(60.0);
 		String vehiclesFile = createVehiclesFile();
 		drtConfigGroup.setVehiclesFile(vehiclesFile);
 		
@@ -110,9 +108,6 @@ public class DrtScenarioCreator extends BaseScenarioCreator{
 			drtConfigGroup.addParameterSet(rebalance);
 		}
 		
-//		MultiModeDrtConfigGroup multiDrt = new MultiModeDrtConfigGroup();
-//		multiDrt.addParameterSet(drtConfigGroup);
-//		config.addModule(multiDrt);
 		config.addModule(drtConfigGroup); 
 		DvrpConfigGroup dvrp = new DvrpConfigGroup();
 		config.addModule(dvrp);

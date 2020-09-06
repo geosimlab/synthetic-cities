@@ -22,6 +22,7 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import ch.ethz.matsim.av.framework.AVModule;
 import syncity.network.GridNetworkGenerator;
 import syncity.population.RandomPopulationGenerator;
+import utils.Structs.TripTimeArguments;
 
 public abstract class BaseScenarioCreator {
 	
@@ -46,10 +47,11 @@ public abstract class BaseScenarioCreator {
 	protected int numOfAvenues;
 	protected int numOfVehicles;
 	protected int numOfIterations;
+	protected TripTimeArguments timeArguments;
 	protected String dispatcherAlgorithm;
 	
 	public BaseScenarioCreator(Config baseConfig, String scenarioDirPath, int popSize, int numOfStreets,
-			int numOfAvenues, int numOfVehicles, int numOfIterations, String dispatcherAlgorithm) {
+			int numOfAvenues, int numOfVehicles, int numOfIterations, String dispatcherAlgorithm, TripTimeArguments timeParameters) {
 		this.scenarioDir = Paths.get(scenarioDirPath);
 		this.dispatcherAlgorithm = dispatcherAlgorithm;
 		this.popSize = popSize;
@@ -57,6 +59,7 @@ public abstract class BaseScenarioCreator {
 		this.numOfStreets = numOfStreets;
 		this.numOfVehicles = numOfVehicles;
 		this.numOfIterations = numOfIterations;
+		this.timeArguments = timeParameters;
 		if (baseConfig == null) {
 			this.config = ConfigUtils.createConfig(getScenarioDir().toString());
 		} else {

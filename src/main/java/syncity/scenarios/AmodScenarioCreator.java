@@ -50,6 +50,7 @@ import ch.ethz.matsim.av.framework.AVModule;
 import ch.ethz.matsim.av.framework.AVQSimModule;
 import utils.AmodeusReferenceFrame;
 import utils.Consts;
+import utils.Structs.*;
 
 public class AmodScenarioCreator extends BaseScenarioCreator{
 	
@@ -64,12 +65,10 @@ public class AmodScenarioCreator extends BaseScenarioCreator{
 			};
 
 	private AVConfigGroup avConfig;
-	private int dispatchPeriod = 10;
 
 	public AmodScenarioCreator(Config baseConfig, String scenarioDirPath, int popSize, int numOfStreets,
-			int numOfAvenues, int numOfVehicles, int numOfIterations, String dispatcherAlgorithm, int dispatchPeriod) {
-		super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues, numOfVehicles, numOfIterations, dispatcherAlgorithm);
-		this.dispatchPeriod = dispatchPeriod;
+			int numOfAvenues, int numOfVehicles, int numOfIterations, String dispatcherAlgorithm, TripTimeArguments timeParameters) {
+		super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues, numOfVehicles, numOfIterations, dispatcherAlgorithm, timeParameters);
 	}
 	
 	protected String[] getScenarioTemplateFiles() {
@@ -90,7 +89,12 @@ public class AmodScenarioCreator extends BaseScenarioCreator{
 		// Dispatcher
 		operator.getDispatcherConfig().setType(this.dispatcherAlgorithm);
 		// TODO add rebalancePeriod as in DynamicRideSharingStrategy
-		operator.getDispatcherConfig().addParam("dispatchPeriod", String.valueOf(this.dispatchPeriod));
+		operator.getDispatcherConfig().addParam("dispatchPeriod", String.valueOf(timeArguments.dispatchPeriod));
+		operator.getDispatcherConfig().addParam("MaxAlphaTravelTime", String.valueOf(timeArguments.alpha));
+		operator.getDispatcherConfig().addParam("MaxBetaTravelTime", String.valueOf(timeArguments.beta));
+		operator.getDispatcherConfig().addParam("MaxWaitTime", String.valueOf(timeArguments.maxWaitTime));
+		operator.getDispatcherConfig().addParam("pickupDurationPerStop", String.valueOf(timeArguments.stopTime));
+		operator.getDispatcherConfig().addParam("dropoffDurationPerStop", String.valueOf(timeArguments.stopTime));
 		// Vehicle Generator
 		operator.getGeneratorConfig().setNumberOfVehicles(this.numOfVehicles);
 
@@ -113,10 +117,10 @@ public class AmodScenarioCreator extends BaseScenarioCreator{
 	}
 
 	public void setDispatchPeriod(int dispatchPeriod) {
-		this.dispatchPeriod = dispatchPeriod;
+		this.timeArguments.dispatchPeriod = dispatchPeriod;
 		if (this.avConfig != null) {
 			OperatorConfig operator = getOperatorConfig();
-			operator.getDispatcherConfig().addParam("dispatchPeriod", String.valueOf(this.dispatchPeriod));
+			operator.getDispatcherConfig().addParam("dispatchPeriod", String.valueOf(dispatchPeriod));
 		}
 		
 	}
