@@ -7,7 +7,7 @@ import constants
 
 
 def is_drt(alg_path):
-    return constants.DRT_NAME in alg_path
+    return constants.DRT_NAME.lower() == os.path.basename(alg_path).lower()
 
 
 def iterate_algorithms(result_path, func):
