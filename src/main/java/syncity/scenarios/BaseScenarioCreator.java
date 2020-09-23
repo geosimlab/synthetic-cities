@@ -211,7 +211,7 @@ public abstract class BaseScenarioCreator {
 	
 	/**
 	 * Set the controler params in the configuration, mainly number of iteration,
-	 * overrideExistingFiles and writing intervals. setting output dir as
+	 * deleteDirectoryIfExists and writing intervals. setting output dir as
 	 * {@value #OUTPUT_DIR}
 	 * 
 	 * @param overrideExistingOutput whether to override existing output files in
@@ -223,7 +223,7 @@ public abstract class BaseScenarioCreator {
 		config.controler().setWritePlansInterval(1);
 		config.controler().setFirstIteration(1);
 		if (overrideExistingOutput)
-			config.controler().setOverwriteFileSetting(OverwriteFileSetting.overwriteExistingFiles);
+			config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		config.controler().setLastIteration(getNumOfIterations());
 		config.controler().setMobsim("qsim");
 		config.controler().setRoutingAlgorithmType(RoutingAlgorithmType.FastAStarLandmarks);

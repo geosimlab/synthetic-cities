@@ -86,6 +86,7 @@ public class AmodScenarioCreator extends BaseScenarioCreator{
 
 		OperatorConfig operator = (OperatorConfig) avConfigGroup.createParameterSet(OperatorConfig.GROUP_NAME);
 		operator.setPredictRouteTravelTime(true);
+		operator.getDispatcherConfig().addParam("SkipConsistencyCheck", "true");
 		// Dispatcher
 		operator.getDispatcherConfig().setType(this.dispatcherAlgorithm);
 		// TODO add rebalancePeriod as in DynamicRideSharingStrategy
