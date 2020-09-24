@@ -9,18 +9,19 @@ import syncity.population.RandomPopulationGenerator;
 import syncity.scenarios.BaseScenarioCreator;
 import syncity.scenarios.ScenarioFactory;
 import utils.Consts.AlgorithmsNames;
+import utils.Structs.NetworkArguments;
+import utils.Structs.PopulationArguments;
 import utils.Structs.TripTimeArguments;
 
 public class SimulationRunner {
 
-    private static final String RUN_ID = "ploop";
+    private static final String RUN_ID = "ploop2";
 
-    protected int popSize = 1000;
     protected int vehiclesNum = 15;
     protected int iterations = 3;
-    protected int numOfSt = 20;
-    protected int numOfAv = 20;
-    protected String[] algorithms = { AlgorithmsNames.HCRS, AlgorithmsNames.DRT};
+
+    protected String[] algorithms = { AlgorithmsNames.HCRS,
+	    AlgorithmsNames.DRT };
 
     public void run(Path workdir) throws Exception {
 
@@ -32,20 +33,23 @@ public class SimulationRunner {
 	    Files.createDirectories(workdir);
 	}
 
-	TripTimeArguments defaultTimeParameters = new TripTimeArguments();
+	TripTimeArguments timeParameters = new TripTimeArguments();
+	PopulationArguments popParameters = new PopulationArguments();
+	NetworkArguments networkParameters = new NetworkArguments();
 
 	for (String algorithm : algorithms) {
-	    GridNetworkGenerator grid = new GridNetworkGenerator(numOfSt,
-		    numOfAv);
+	    
+	    GridNetworkGenerator grid = new GridNetworkGenerator(networkParameters);
 	    grid.generateGridNetwork();
 	    String net = grid.writeNetwork(workdir.toString());
 	    RandomPopulationGenerator popGen = new RandomPopulationGenerator(
-		    grid.getNetwork(), popSize);
+		    grid.getNetwork(), popParameters);
 	    popGen.populateNodes();
 	    String plansFile = popGen.writePopulation(workdir.toString());
+	    
 	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(workdir,
 		    algorithm, plansFile, net, vehiclesNum, iterations,
-		    (TripTimeArguments) defaultTimeParameters.clone());
+		    (TripTimeArguments) timeParameters.clone());
 
 	    scenario.prepare();
 	    scenario.run();

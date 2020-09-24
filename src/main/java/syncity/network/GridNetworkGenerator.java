@@ -19,6 +19,7 @@ import org.matsim.core.network.io.NetworkWriter;
 
 import utils.BasicUtils;
 import utils.MatsimUtils;
+import utils.Structs.NetworkArguments;
 
 /**
  * Generate a bidirectional grid
@@ -50,7 +51,13 @@ public class GridNetworkGenerator {
 
     public GridNetworkGenerator() {
 	this(DEFAULT_CAPACITY, DEFALUT_STREETS_NUM, DEFAULT_AVENUES_NUM,
-		DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED);
+		DEFAULT_LINK_LENGTH, DEFAULT_SPEED, DEFAULT_SPEED,
+		DEFAULT_SHOOT_RATIO);
+    }
+
+    public GridNetworkGenerator(NetworkArguments params) {
+	this(params.capacity, params.numOfSt, params.numOfAv, params.linkLength,
+		params.speed, params.speed, params.nodeShift);
     }
 
     /**
@@ -62,7 +69,7 @@ public class GridNetworkGenerator {
      */
     public GridNetworkGenerator(int numOfStreets, int numOfAvenues) {
 	this(DEFAULT_CAPACITY, numOfStreets, numOfAvenues, DEFAULT_LINK_LENGTH,
-		DEFAULT_SPEED, DEFAULT_SPEED);
+		DEFAULT_SPEED, DEFAULT_SPEED, DEFAULT_SHOOT_RATIO);
     }
 
     /**
@@ -78,10 +85,10 @@ public class GridNetworkGenerator {
      */
     public GridNetworkGenerator(long capacity, int numOfStreets,
 	    int numOfAvenues, int linkLength, double streetSpeed,
-	    double avenueSpeed) {
+	    double avenueSpeed, double nodeShiftRatio) {
 	this.capacity = capacity;
 	this.linkLength = linkLength;
-	this.shootNodeDistance = linkLength * DEFAULT_SHOOT_RATIO;
+	this.shootNodeDistance = linkLength * nodeShiftRatio;
 	this.numOfStreets = numOfStreets;
 	this.numOfAvenues = numOfAvenues;
 	this.driveSpeedStreets = streetSpeed;
@@ -139,11 +146,15 @@ public class GridNetworkGenerator {
 	return out.toAbsolutePath().toString();
     }
 
-    private void writeLinkLengthDistribution(Path directory) throws IOException {
+    private void writeLinkLengthDistribution(Path directory)
+	    throws IOException {
 	Map<Integer, Long> counts = net.getLinks().values().stream() //
-		.collect(Collectors.groupingBy(l -> (int)(l.getLength()), Collectors.counting()));
-	String filename = directory.resolve(getTitle() + ".linkLengthDistribution.csv").toString();
-	BasicUtils.writeSimpleMap(counts, filename, Arrays.asList("LinkLength", "Count"));
+		.collect(Collectors.groupingBy(l -> (int) (l.getLength()),
+			Collectors.counting()));
+	String filename = directory
+		.resolve(getTitle() + ".linkLengthDistribution.csv").toString();
+	BasicUtils.writeSimpleMap(counts, filename,
+		Arrays.asList("LinkLength", "Count"));
     }
 
     public void generateGridNetwork() {

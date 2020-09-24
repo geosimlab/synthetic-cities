@@ -11,20 +11,33 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 
 import utils.BasicUtils;
+import utils.Structs.PopulationArguments;
 
-public class PersonCreator {
+public class PersonFactory {
 
     public static final String WORK_ACTIVITY_TYPE = "work";
     public static final String HOME_ACTIVITY_TYPE = "home";
 
     protected final static int SECONDS_IN_HOUR = 3600;
 
-    protected static float leaveHomeTime = 6;
-    protected static float leaveHomeWindowSize = 3;
-    protected static float workdayLength = 6;
-    protected static float workdayWindowSize = 4;
+    protected float leaveHomeTime = 6;
+    protected float leaveHomeWindowSize = 3;
+    protected float workdayLength = 6;
+    protected float workdayWindowSize = 4;
+    
+    public PersonFactory() {}
+    public PersonFactory(PopulationArguments args) {
+	updatePersonParameters(args);
+    }
+    
+    public void updatePersonParameters(PopulationArguments args) {
+	this.leaveHomeTime = args.leaveHomeTime;
+	this.leaveHomeWindowSize = args.leaveHomeWindowSize;
+	this.workdayLength = args.workdayLength;
+	this.workdayWindowSize = args.workdayWindowSize;
+    }
 
-    public static Person createPersonWithStandardPlan(Node homeNode,
+    public Person createPersonWithStandardPlan(Node homeNode,
 	    Node WorkNode, Population population) {
 	Person person = createPerson(population);
 	Plan plan = createPlanToPerson(homeNode, WorkNode, population);
@@ -54,7 +67,7 @@ public class PersonCreator {
      * @param homeNode the home node for that person
      * @param person   the person to add the plan on
      */
-    protected static Plan createPlanToPerson(Node homeNode, Node WorkNode,
+    protected Plan createPlanToPerson(Node homeNode, Node WorkNode,
 	    Population population) {
 	PopulationFactory populationFactory = population.getFactory();
 	double leaveHome = BasicUtils.randInWindow(leaveHomeTime,
@@ -77,7 +90,7 @@ public class PersonCreator {
      * @param leaveWork         time to leave work (in hours 0-24)
      * @return the created plan
      */
-    protected static Plan createHomeWorkHomePlan(
+    protected Plan createHomeWorkHomePlan(
 	    PopulationFactory populationFactory, Node homeNode,
 	    double leaveHome, Node workNode, double leaveWork) {
 

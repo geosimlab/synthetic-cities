@@ -22,11 +22,11 @@ public class PersonAnalysis {
             if (!(planElement instanceof Activity))
         	continue;
             Activity act = (Activity) planElement;
-            if (act.getType() == PersonCreator.HOME_ACTIVITY_TYPE) {
+            if (act.getType() == PersonFactory.HOME_ACTIVITY_TYPE) {
         	homeNode = network.getLinks().get(act.getLinkId())
         		.getToNode();
             }
-            if (act.getType() == PersonCreator.WORK_ACTIVITY_TYPE) {
+            if (act.getType() == PersonFactory.WORK_ACTIVITY_TYPE) {
         	workNode = network.getLinks().get(act.getLinkId())
         		.getToNode();
             }

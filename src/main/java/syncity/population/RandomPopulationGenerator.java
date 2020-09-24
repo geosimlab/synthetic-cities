@@ -23,6 +23,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 
 import utils.BasicUtils;
 import utils.MatsimUtils;
+import utils.Structs.PopulationArguments;
 
 /**
  * A class to generate a random population in the given
@@ -45,28 +46,38 @@ import utils.MatsimUtils;
  */
 public class RandomPopulationGenerator {
 
-    // default minimal distance, based on the default value of
-    // "maxBeelineWalkConnectionDistance"
-    public static final int MINIMUN_OD_DISTANCE = 300;
     public static final int HOME_NODE_ID = 0;
     public static final int WORK_NODE_ID = 1;
 
-    protected int popSize;
+    protected PopulationArguments popParameters;
+    protected PersonFactory personFac;
     protected Network network;
     protected Population population;
     protected HashMap<String, Integer> nodeAsHomeWork;
 
     public RandomPopulationGenerator(Config config, Network network,
-	    int popSize) {
+	    PopulationArguments params) {
+	if (params == null) {
+	    params = new PopulationArguments();
+	}
+	popParameters = params;
+	
 	if (network == null) {
 	    network = ScenarioUtils.loadScenario(config).getNetwork();
 	} else if (config == null) {
 	    config = ConfigUtils.createConfig();
 	}
-	this.popSize = popSize;
 	this.network = network;
-	this.nodeAsHomeWork = new HashMap<>();
-	this.population = PopulationUtils.createPopulation(config, network);
+	nodeAsHomeWork = new HashMap<>();
+	population = PopulationUtils.createPopulation(config, network);
+	
+	personFac = new PersonFactory(popParameters);
+    }
+
+    public RandomPopulationGenerator(Config config, Network network,
+	    int popSize) {
+	this(config, network, null);
+	this.popParameters.popSize = popSize;
     }
 
     public RandomPopulationGenerator(Config config, int popSize) {
@@ -75,6 +86,10 @@ public class RandomPopulationGenerator {
 
     public RandomPopulationGenerator(Network network, int popSize) {
 	this(null, network, popSize);
+    }
+    
+    public RandomPopulationGenerator(Network network, PopulationArguments params) {
+	this(null, network, params);
     }
 
     public Population getPopulation() {
@@ -125,7 +140,7 @@ public class RandomPopulationGenerator {
     }
 
     private String getTitle() {
-	return String.format("Population-%d", this.popSize);
+	return String.format("Population-%d", this.popParameters.popSize);
     }
 
     /**
@@ -136,10 +151,10 @@ public class RandomPopulationGenerator {
 	this.network.getNodes().values().toArray(nodesArray);
 	System.out.println(
 		"The number of network nodes is: " + nodesArray.length);
-	for (int j = 0; j < popSize; j++) {
+	for (int j = 0; j < popParameters.popSize; j++) {
 	    Node homeNode = BasicUtils.chooseRand(nodesArray);
 	    Node workNode = chooseWorkNode(nodesArray, homeNode);
-	    Person person = PersonCreator.createPersonWithStandardPlan(homeNode, //
+	    Person person = personFac.createPersonWithStandardPlan(homeNode, //
 		    workNode, this.population);
 	    this.population.addPerson(person);
 	    updateStatsMaps(person);
@@ -147,13 +162,15 @@ public class RandomPopulationGenerator {
     }
 
     protected Node chooseWorkNode(Node[] nodesArray, Node homeNode) {
-	return chooseWorkNode(nodesArray, homeNode, MINIMUN_OD_DISTANCE);
+	return chooseWorkNode(nodesArray, homeNode,
+		popParameters.minHomeWorkDistance);
     }
 
     protected Node chooseWorkNode(Node[] nodesArray, Node homeNode,
 	    double minimumDistance) {
 	Node workNode = BasicUtils.chooseRand(nodesArray);
-	while (MatsimUtils.nodesDistance(workNode, homeNode) < minimumDistance) {
+	while (MatsimUtils.nodesDistance(workNode,
+		homeNode) < minimumDistance) {
 	    workNode = BasicUtils.chooseRand(nodesArray);
 	}
 	return workNode;
