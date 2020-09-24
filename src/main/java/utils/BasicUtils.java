@@ -4,13 +4,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.random.JDKRandomGenerator;
-import org.matsim.api.core.v01.network.Node;
 
 public class BasicUtils {
 
@@ -50,13 +51,6 @@ public class BasicUtils {
     public static <T> T chooseRand(T[] arr) {
 	int index = getUniformRandomGenerator().nextInt(arr.length);
 	return arr[index];
-    }
-
-    public static double nodesDistance(Node nodeA, Node nodeB) {
-	double xDistance = nodeA.getCoord().getX() - nodeB.getCoord().getX();
-	double yDistance = nodeA.getCoord().getY() - nodeB.getCoord().getY();
-	double distance = Math.hypot(xDistance, yDistance);
-	return distance;
     }
 
     public static <T extends Comparable<T>> boolean arrayContains(T[] arr,
@@ -101,6 +95,12 @@ public class BasicUtils {
 	}
 	writer.close();
 	System.out.println("Wrote Map as csv to:  " + filename);
+    }
+    
+    public static Path copyFiletoDir(Path file, Path dir) throws IOException {
+	Path target = dir.resolve(file.getFileName());
+	Files.copy(file, target);
+	return target;
     }
 
 }

@@ -9,7 +9,7 @@ import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
 
-import utils.BasicUtils;
+import utils.MatsimUtils;
 
 public class PersonAnalysis {
 
@@ -37,7 +37,7 @@ public class PersonAnalysis {
     
     public static double getHomeWorkDistance(Person person, Network network) {
 	Pair<Node, Node> pair = getPersonHomeWork(person, network);
-	return BasicUtils.nodesDistance(pair.getLeft(), pair.getRight());
+	return MatsimUtils.nodesDistance(pair.getLeft(), pair.getRight());
     }
 
 }

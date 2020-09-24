@@ -22,6 +22,7 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import utils.BasicUtils;
+import utils.MatsimUtils;
 
 /**
  * A class to generate a random population in the given
@@ -152,7 +153,7 @@ public class RandomPopulationGenerator {
     protected Node chooseWorkNode(Node[] nodesArray, Node homeNode,
 	    double minimumDistance) {
 	Node workNode = BasicUtils.chooseRand(nodesArray);
-	while (BasicUtils.nodesDistance(workNode, homeNode) < minimumDistance) {
+	while (MatsimUtils.nodesDistance(workNode, homeNode) < minimumDistance) {
 	    workNode = BasicUtils.chooseRand(nodesArray);
 	}
 	return workNode;

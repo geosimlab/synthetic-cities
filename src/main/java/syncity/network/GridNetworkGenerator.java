@@ -18,6 +18,7 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.NetworkWriter;
 
 import utils.BasicUtils;
+import utils.MatsimUtils;
 
 /**
  * Generate a bidirectional grid
@@ -194,7 +195,7 @@ public class GridNetworkGenerator {
 	NetworkFactory fac = net.getFactory();
 	String srcId = srcNode.getId().toString();
 	String dstId = dstNode.getId().toString();
-	double linkLength = BasicUtils.nodesDistance(srcNode, dstNode);
+	double linkLength = MatsimUtils.nodesDistance(srcNode, dstNode);
 	double travelTime = linkLength / driveSpeed * 3.6; // [s]
 	// create links
 	Link l = fac.createLink(Id.createLinkId(srcId + "->" + dstId), srcNode,
