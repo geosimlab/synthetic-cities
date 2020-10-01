@@ -11,15 +11,15 @@ import syncity.scenarios.ScenarioFactory;
 import utils.Consts.AlgorithmsNames;
 import utils.Structs.NetworkArguments;
 import utils.Structs.PopulationArguments;
-import utils.Structs.TripTimeArguments;
+import utils.Structs.DispatcherArguments;
 
 public class PopulationDownscaling {
     
     
-    private static final String RUN_ID = "ploop2";
+    private static final String RUN_ID = "downscaling-test";
 
-    protected int vehiclesNum = 15;
-    protected int iterations = 3;
+    protected int vehiclesNum = 500;
+    protected int iterations = 2;
 
     protected float[] kValues = {1, 0.5f, 0.25f, 0.05f};
     protected String algorithm = AlgorithmsNames.DRT;
@@ -34,7 +34,7 @@ public class PopulationDownscaling {
 	    Files.createDirectories(workdir);
 	}
 
-	TripTimeArguments timeParameters = new TripTimeArguments();
+	DispatcherArguments dispatcherParams = new DispatcherArguments();
 	PopulationArguments popParameters = new PopulationArguments();
 	NetworkArguments networkParameters = new NetworkArguments();
 
@@ -47,9 +47,10 @@ public class PopulationDownscaling {
 	
 	for (float sampleSize: kValues) {
 	    String plansFile = popGen.writePopulation(workdir.toString(), sampleSize);
-	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(workdir,
-		    algorithm, plansFile, net, vehiclesNum, iterations,
-		    (TripTimeArguments) timeParameters.clone());
+	    String scenarioPath = workdir.resolve(algorithm+"-k"+sampleSize).toString();
+	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(scenarioPath,
+		    algorithm, plansFile, net, iterations,
+		    (DispatcherArguments) dispatcherParams.clone());
 
 	    scenario.prepare();
 	    scenario.run();

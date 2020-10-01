@@ -67,21 +67,21 @@ public class AmodScenarioCreator extends BaseScenarioCreator {
     private AVConfigGroup avConfig;
 
     public AmodScenarioCreator(Config baseConfig, String scenarioDirPath,
-	    int popSize, int numOfStreets, int numOfAvenues, int numOfVehicles,
+	    int popSize, int numOfStreets, int numOfAvenues, 
 	    int numOfIterations, String dispatcherAlgorithm,
-	    TripTimeArguments timeParameters) throws IOException {
+	    DispatcherArguments dispatcherParams) throws IOException {
 	super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues,
-		numOfVehicles, numOfIterations, dispatcherAlgorithm,
-		timeParameters);
+		numOfIterations, dispatcherAlgorithm,
+		dispatcherParams);
     }
 
     public AmodScenarioCreator(Config baseConfig, String scenarioDirPath,
-	    String populationPath, String networkPath, int numOfVehicles,
+	    String populationPath, String networkPath,
 	    int numOfIterations, String dispatcherAlgorithm,
-	    TripTimeArguments timeParameters) throws IOException {
+	    DispatcherArguments dispatcherParams) throws IOException {
 	super(baseConfig, scenarioDirPath, populationPath, networkPath,
-		numOfVehicles, numOfIterations, dispatcherAlgorithm,
-		timeParameters);
+		numOfIterations, dispatcherAlgorithm,
+		dispatcherParams);
     }
 
     protected String[] getScenarioTemplateFiles() {

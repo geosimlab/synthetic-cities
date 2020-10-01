@@ -22,7 +22,7 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import ch.ethz.matsim.av.framework.AVModule;
 import syncity.network.GridNetworkGenerator;
 import syncity.population.RandomPopulationGenerator;
-import utils.Structs.TripTimeArguments;
+import utils.Structs.DispatcherArguments;
 
 public abstract class BaseScenarioCreator {
 
@@ -51,15 +51,15 @@ public abstract class BaseScenarioCreator {
     protected int numOfAvenues;
     protected int numOfVehicles;
     protected int numOfIterations;
-    protected TripTimeArguments timeArguments;
+    protected DispatcherArguments timeArguments;
     protected String dispatcherAlgorithm;
 
     public BaseScenarioCreator(Config baseConfig, String scenarioDirPath,
-	    int numOfVehicles, int numOfIterations, String dispatcherAlgorithm,
-	    TripTimeArguments timeParameters) {
+	    int numOfIterations, String dispatcherAlgorithm,
+	    DispatcherArguments timeParameters) {
 	this.scenarioDir = Paths.get(scenarioDirPath);
 	this.dispatcherAlgorithm = dispatcherAlgorithm;
-	this.numOfVehicles = numOfVehicles;
+	this.numOfVehicles = timeParameters.vehiclesNum;
 	this.numOfIterations = numOfIterations;
 	this.timeArguments = timeParameters;
 	if (baseConfig == null) {
@@ -70,20 +70,20 @@ public abstract class BaseScenarioCreator {
     }
 
     public BaseScenarioCreator(Config baseConfig, String scenarioDirPath,
-	    String populationPath, String networkPath, int numOfVehicles,
+	    String populationPath, String networkPath,
 	    int numOfIterations, String dispatcherAlgorithm,
-	    TripTimeArguments timeParameters) {
-	this(baseConfig, scenarioDirPath, numOfVehicles, numOfIterations,
+	    DispatcherArguments timeParameters) {
+	this(baseConfig, scenarioDirPath, numOfIterations,
 		dispatcherAlgorithm, timeParameters);
 	getConfig().plans().setInputFile(populationPath);
 	getConfig().network().setInputFile(networkPath);
     }
 
     public BaseScenarioCreator(Config baseConfig, String scenarioDirPath,
-	    int popSize, int numOfStreets, int numOfAvenues, int numOfVehicles,
+	    int popSize, int numOfStreets, int numOfAvenues,
 	    int numOfIterations, String dispatcherAlgorithm,
-	    TripTimeArguments timeParameters) throws IOException {
-	this(baseConfig, scenarioDirPath, numOfVehicles, numOfIterations,
+	    DispatcherArguments timeParameters) throws IOException {
+	this(baseConfig, scenarioDirPath, numOfIterations,
 		dispatcherAlgorithm, timeParameters);
 	this.popSize = popSize;
 	addNetworkIfMissing(numOfStreets, numOfAvenues, false);

@@ -11,13 +11,12 @@ import syncity.scenarios.ScenarioFactory;
 import utils.Consts.AlgorithmsNames;
 import utils.Structs.NetworkArguments;
 import utils.Structs.PopulationArguments;
-import utils.Structs.TripTimeArguments;
+import utils.Structs.DispatcherArguments;
 
 public class AlgorithmsCompare {
 
     private static final String RUN_ID = "ploop2";
 
-    protected int vehiclesNum = 15;
     protected int iterations = 3;
 
     protected String[] algorithms = { AlgorithmsNames.HCRS,
@@ -33,7 +32,7 @@ public class AlgorithmsCompare {
 	    Files.createDirectories(workdir);
 	}
 
-	TripTimeArguments timeParameters = new TripTimeArguments();
+	DispatcherArguments dispatcherParameters = new DispatcherArguments();
 	PopulationArguments popParameters = new PopulationArguments();
 	NetworkArguments networkParameters = new NetworkArguments();
 
@@ -46,10 +45,10 @@ public class AlgorithmsCompare {
 	String plansFile = popGen.writePopulation(workdir.toString());
 	
 	for (String algorithm : algorithms) {
-	    	    
-	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(workdir,
-		    algorithm, plansFile, net, vehiclesNum, iterations,
-		    (TripTimeArguments) timeParameters.clone());
+	    String scenarioPath = workdir.resolve(algorithm).toString();	    
+	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(scenarioPath,
+		    algorithm, plansFile, net, iterations,
+		    (DispatcherArguments) dispatcherParameters.clone());
 
 	    scenario.prepare();
 	    scenario.run();
