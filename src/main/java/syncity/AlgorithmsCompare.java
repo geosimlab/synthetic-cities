@@ -13,7 +13,7 @@ import utils.Structs.NetworkArguments;
 import utils.Structs.PopulationArguments;
 import utils.Structs.TripTimeArguments;
 
-public class SimulationRunner {
+public class AlgorithmsCompare {
 
     private static final String RUN_ID = "ploop2";
 
@@ -37,16 +37,16 @@ public class SimulationRunner {
 	PopulationArguments popParameters = new PopulationArguments();
 	NetworkArguments networkParameters = new NetworkArguments();
 
+	GridNetworkGenerator grid = new GridNetworkGenerator(networkParameters);
+	grid.generateGridNetwork();
+	String net = grid.writeNetwork(workdir.toString());
+	RandomPopulationGenerator popGen = new RandomPopulationGenerator(
+		grid.getNetwork(), popParameters);
+	popGen.populateNodes();
+	String plansFile = popGen.writePopulation(workdir.toString());
+	
 	for (String algorithm : algorithms) {
-	    
-	    GridNetworkGenerator grid = new GridNetworkGenerator(networkParameters);
-	    grid.generateGridNetwork();
-	    String net = grid.writeNetwork(workdir.toString());
-	    RandomPopulationGenerator popGen = new RandomPopulationGenerator(
-		    grid.getNetwork(), popParameters);
-	    popGen.populateNodes();
-	    String plansFile = popGen.writePopulation(workdir.toString());
-	    
+	    	    
 	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(workdir,
 		    algorithm, plansFile, net, vehiclesNum, iterations,
 		    (TripTimeArguments) timeParameters.clone());
@@ -61,7 +61,7 @@ public class SimulationRunner {
 	if (args.length > 0) {
 	    workdir = Paths.get(args[0]).toAbsolutePath();
 	}
-	new SimulationRunner().run(workdir);
+	new AlgorithmsCompare().run(workdir);
     }
 
 }

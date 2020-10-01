@@ -14,11 +14,11 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
-import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.population.io.StreamingPopulationWriter;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import utils.BasicUtils;
@@ -98,30 +98,66 @@ public class RandomPopulationGenerator {
 
     /**
      * Writes the population to a file in the given path, if path is folder the
-     * default name for the population file would be "Population-(popSize).xml"
+     * default name for the population file would be "Population-(popSize)-k1.xml"
      * 
      * @param outPath the path to write the population xml to
      * @return the absolute path of the created file
      * @throws IOException
      */
     public String writePopulation(String outPath) throws IOException {
-	Path out = Paths.get(outPath);
-	Path outputFolder;
-	if (Files.isDirectory(out)) {
-	    outputFolder = out;
-	    out = out.resolve(this.getTitle() + ".xml");
-	} else
-	    outputFolder = out.getParent();
-	// create output folder if necessary
-	Files.createDirectories(outputFolder);
+	return writePopulation(outPath, 1);
+    }
+    
+    /**
+     * Writes the population to a file in the given path, if path is folder the
+     * default name for the population file would be "Population-(popSize)-k(fraction).xml"
+     * 
+     * @param outPath the path to write the population xml to
+     * @param fraction the fraction of the agents to write (chosen at random)
+     * @return the absolute path of the created file
+     * @throws IOException
+     */
+    public String writePopulation(String outPath, float fraction) throws IOException {
+	Path out = createOutDir(outPath, fraction);
 
 	// write network
-	new PopulationWriter(population).write(out.toString());
+	StreamingPopulationWriter writer = new StreamingPopulationWriter(fraction);
+	writer.startStreaming(out.toString());
+	population.getPersons().values().forEach(writer::run);
 	writeDistanceInfo(out);
 	writeNodesStats(out);
 	return out.toAbsolutePath().toString();
     }
 
+    /**
+     * Creates the missing directories in the hierarchy of the out put file
+     * returns the path for the output file
+     *  
+     * @param outPath filename or an existing directory
+     * @param fraction fraction of the population to be documented in filename
+     * @return the path of the out file
+     * @throws IOException
+     */
+    protected Path createOutDir(String outPath, float fraction)
+	    throws IOException {
+	Path out = Paths.get(outPath);
+	Path outputFolder;
+	if (Files.isDirectory(out)) {
+	    outputFolder = out;
+	    out = out.resolve(this.getTitle()+"-k"+fraction+".xml");
+	} else {
+	    outputFolder = out.getParent();
+	    // create output folder if necessary
+	    Files.createDirectories(outputFolder);
+	}
+	return out;
+    }
+
+    /**
+     * write a file describing the Origin-Destination distance distribution
+     * @param populationFileName the file name of the relevant population
+     * @throws IOException
+     */
     protected void writeDistanceInfo(Path populationFileName)
 	    throws IOException {
 	Map<Integer, Long> counts = population.getPersons().values().stream() //
@@ -133,6 +169,11 @@ public class RandomPopulationGenerator {
 		Arrays.asList("Distance", "Count"));
     }
 
+    /**
+     * write a file describing the agents in node distribution
+     * @param populationFileName the file name of the relevant population
+     * @throws IOException
+     */
     protected void writeNodesStats(Path populationFileName) throws IOException {
 	String out = populationFileName + ".NodesStats.csv";
 	BasicUtils.writeSimpleMap(nodeAsHomeWork, out, //
@@ -161,11 +202,26 @@ public class RandomPopulationGenerator {
 	}
     }
 
+    /**
+     * return a node with a distance from homeNode greater than 
+     * minHomeWorkDistance parameter in PopulationParameters
+     * @param nodesArray array of all nodes in the network
+     * @param homeNode the node to calc distance from
+     * @return a node
+     */
     protected Node chooseWorkNode(Node[] nodesArray, Node homeNode) {
 	return chooseWorkNode(nodesArray, homeNode,
 		popParameters.minHomeWorkDistance);
     }
 
+    /**
+     * return a node with a distance from homeNode greater than 
+     * minimumDistance parameter in PopulationParameters
+     * @param nodesArray array of all nodes in the network
+     * @param homeNode the node to calc distance from
+     * @param minimumDistance the minimalDistance (in meters)
+     * @return a node
+     */
     protected Node chooseWorkNode(Node[] nodesArray, Node homeNode,
 	    double minimumDistance) {
 	Node workNode = BasicUtils.chooseRand(nodesArray);
@@ -183,6 +239,10 @@ public class RandomPopulationGenerator {
 	populateNodes();
     }
 
+    /**
+     * update the Node map stats with home and work of {@code person}
+     * @param person the person to use when updating
+     */
     protected void updateStatsMaps(Person person) {
 	Pair<Node, Node> homeWorkPair = PersonAnalysis.getPersonHomeWork(person, //
 		network);
@@ -196,6 +256,11 @@ public class RandomPopulationGenerator {
 	}
     }
 
+    /**
+     * Update the node stats with the type given (0=home, 1=work) 
+     * @param node
+     * @param type (0=home, 1=work)
+     */
     protected void updateNodeStat(Node node, int type) {
 	String key = node.getId().toString() + "\";\"" + type;
 	int curValue = nodeAsHomeWork.getOrDefault(key, 0);
@@ -220,5 +285,6 @@ public class RandomPopulationGenerator {
 	popGen.populateNodes();
 
 	popGen.writePopulation("./output/");
+	popGen.writePopulation("./output/", 0.5f);
     }
 }
