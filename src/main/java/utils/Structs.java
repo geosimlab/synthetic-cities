@@ -22,7 +22,10 @@ public class Structs {
 	public double maxWaitTime = 1800; // [s]
 	public int dispatchPeriod = 30; // [s]
 	public int stopTime = 60; // [s]
-	public int vehiclesNum = 500; // [s]
+	
+	public int vehiclesNum = 500;
+	public boolean rejection = true;
+	public boolean rebalance = false;
     }
 
     public static class PopulationArguments extends BaseStruct {

@@ -40,17 +40,25 @@ public class DrtScenarioCreator extends BaseScenarioCreator {
 	    int popSize, int numOfStreets, int numOfAvenues,
 	    int numOfIterations, String dispatcherAlgorithm,
 	    DispatcherArguments dispatcherParams) throws IOException {
+	
 	super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues,
 		numOfIterations, dispatcherAlgorithm,
 		dispatcherParams);
+	
+	rebalance = dispatcherParams.rebalance;
+	enableRejection = dispatcherParams.rejection;
     }
 
     public DrtScenarioCreator(Config baseConfig, String scenarioDirPath,
 	    String populationPath, String networkPath,
 	    int numOfIterations, String dispatcherAlgorithm,
 	    DispatcherArguments dispatcherParams) throws IOException {
+	
 	super(baseConfig, scenarioDirPath, populationPath, networkPath,
 		numOfIterations, dispatcherAlgorithm, dispatcherParams);
+	
+	rebalance = dispatcherParams.rebalance;
+	enableRejection = dispatcherParams.rejection;
     }
 
     protected String[] getScenarioTemplateFiles() {
