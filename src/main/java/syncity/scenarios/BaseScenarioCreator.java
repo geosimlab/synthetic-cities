@@ -261,7 +261,8 @@ public abstract class BaseScenarioCreator {
 	config.controler().setMobsim("qsim");
 	config.controler().setRoutingAlgorithmType(
 		RoutingAlgorithmType.FastAStarLandmarks);
-	config.controler().setOutputDirectory(OUTPUT_DIR);
+	String outputDir = getScenarioDir().resolve(OUTPUT_DIR).toString();
+	config.controler().setOutputDirectory(outputDir);
     }
 
     private void setPlanSelectionParams() {
