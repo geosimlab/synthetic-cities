@@ -124,6 +124,7 @@ public class RandomPopulationGenerator {
 	StreamingPopulationWriter writer = new StreamingPopulationWriter(fraction);
 	writer.startStreaming(out.toString());
 	population.getPersons().values().forEach(writer::run);
+	writer.closeStreaming();
 	writeDistanceInfo(out);
 	writeNodesStats(out);
 	return out.toAbsolutePath().toString();
