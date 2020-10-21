@@ -37,26 +37,32 @@ public class DrtScenarioCreator extends BaseScenarioCreator {
     private DrtConfigGroup drtConfig;
 
     public DrtScenarioCreator(Config baseConfig, String scenarioDirPath,
+	    int numOfIterations, String dispatcherAlgorithm,
+	    DispatcherArguments timeParameters) {
+	super(baseConfig, scenarioDirPath, numOfIterations, dispatcherAlgorithm,
+		timeParameters);
+    }
+
+    public DrtScenarioCreator(Config baseConfig, String scenarioDirPath,
 	    int popSize, int numOfStreets, int numOfAvenues,
 	    int numOfIterations, String dispatcherAlgorithm,
 	    DispatcherArguments dispatcherParams) throws IOException {
-	
+
 	super(baseConfig, scenarioDirPath, popSize, numOfStreets, numOfAvenues,
-		numOfIterations, dispatcherAlgorithm,
-		dispatcherParams);
-	
+		numOfIterations, dispatcherAlgorithm, dispatcherParams);
+
 	rebalance = dispatcherParams.rebalance;
 	enableRejection = dispatcherParams.rejection;
     }
 
     public DrtScenarioCreator(Config baseConfig, String scenarioDirPath,
-	    String populationPath, String networkPath,
-	    int numOfIterations, String dispatcherAlgorithm,
-	    DispatcherArguments dispatcherParams) throws IOException {
-	
+	    String populationPath, String networkPath, int numOfIterations,
+	    String dispatcherAlgorithm, DispatcherArguments dispatcherParams)
+	    throws IOException {
+
 	super(baseConfig, scenarioDirPath, populationPath, networkPath,
 		numOfIterations, dispatcherAlgorithm, dispatcherParams);
-	
+
 	rebalance = dispatcherParams.rebalance;
 	enableRejection = dispatcherParams.rejection;
     }
@@ -82,8 +88,8 @@ public class DrtScenarioCreator extends BaseScenarioCreator {
     }
 
     private String createVehiclesFile() {
-	int seatsPerVehicle = 4; // this is important for DRT, value is not used
-				 // by taxi
+	int seatsPerVehicle = timeArguments.seatsPerVehicle; // this is important for DRT, value is not used
+				  // by taxi
 	double operationStartTime = getConfig().qsim().getStartTime();
 	;
 	double operationEndTime = getConfig().qsim().getEndTime();
@@ -114,16 +120,22 @@ public class DrtScenarioCreator extends BaseScenarioCreator {
     @Override
     protected void addDispatcherConfigGroup() {
 	DrtConfigGroup drtConfigGroup = new DrtConfigGroup();
+	
+	// if the module already exists ad module overrides with the new values
+	// So we add the module so it will be overridden and then change it.
+	config.addModule(drtConfigGroup);
+	
+	
 	// We use av so we'll be able to use the same plans for DRT and AV
 	drtConfigGroup.setMode(BaseScenarioCreator.LEG_MODE);
-//		drtConfigGroup.setOperationalScheme(OperationalScheme.door2door.toString());;
 	drtConfigGroup.setMaxTravelTimeAlpha(timeArguments.alpha);
 	drtConfigGroup.setMaxTravelTimeBeta(timeArguments.beta);
 	drtConfigGroup.setMaxWaitTime(timeArguments.maxWaitTime);
 	drtConfigGroup.setStopDuration(timeArguments.stopTime);
 	drtConfigGroup.setRequestRejection(this.enableRejection);
-	String vehiclesFile = createVehiclesFile();
-	drtConfigGroup.setVehiclesFile(vehiclesFile);
+	drtConfigGroup.setEstimatedSpeed(timeArguments.speedEstimation);
+//	String vehiclesFile = createVehiclesFile();
+//	drtConfigGroup.setVehiclesFile(vehiclesFile);
 
 	if (this.rebalance) {
 	    MinCostFlowRebalancingParams rebalance = new MinCostFlowRebalancingParams();
@@ -133,8 +145,7 @@ public class DrtScenarioCreator extends BaseScenarioCreator {
 	    rebalance.setCellSize(2000);
 	    drtConfigGroup.addParameterSet(rebalance);
 	}
-
-	config.addModule(drtConfigGroup);
+	
 	DvrpConfigGroup dvrp = new DvrpConfigGroup();
 	config.addModule(dvrp);
 	OTFVisConfigGroup otfvis = new OTFVisConfigGroup();
