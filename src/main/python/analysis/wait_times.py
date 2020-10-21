@@ -18,7 +18,12 @@ def _get_wait_time_stats_drt(alg_path):
     df = pd.read_csv(full_path, sep=";")
     last_it = df.iloc[-1]
     return {"mean wait": last_it["wait_average"],
-            "95p wait": last_it["wait_p95"], }
+            "95p wait": last_it["wait_p95"], 
+            "rejection rate": last_it["rejectionRate"],
+            "avg travel time": last_it["totalTravelTime_mean"],
+            "avg direct distance": last_it["directDistance_m_mean"], 
+            "avg trip distance": last_it["distance_m_mean"], 
+           }
 
 
 def get_wait_stats(alg_path):

@@ -12,7 +12,8 @@ def _fmt_timedelta(seconds):
     return ('{:02d}:{:02d}').format(int(hours), int(minutes)) 
 
 def _get_filterd_columns_list(df):
-    cols = ['4 pax', '3 pax', '2 pax', '1 pax', '0 pax', 'stay']
+    cols = ['10 pax', '9 pax', '8 pax', '7 pax', '6 pax', '5 pax',
+             '4 pax', '3 pax', '2 pax', '1 pax', '0 pax', 'stay']
     return [c for c in cols if c in df.columns]
 
 def _get_occupancy_stats_drt(alg_path):

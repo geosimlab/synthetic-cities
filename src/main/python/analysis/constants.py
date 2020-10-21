@@ -2,15 +2,14 @@ import seaborn as sns
 sns.set()
 DRT_NAME = "DRT"
 
-OCCUPANCY_COLS = ['4 pax',
-                  '3 pax',
-                  '2 pax',
-                  '1 pax',
-                  '0 pax',
-                  'pickup',
-                  'rebalance',
-                  'stay',
-                  'off-service'
+OCCUPANCY_COLS = ['10 pax', '9 pax', '8 pax',
+                   '7 pax', '6 pax', '5 pax',
+                   '4 pax', '3 pax', '2 pax',
+                   '1 pax', '0 pax',
+                   'pickup',
+                   'rebalance',
+                   'stay',
+                   'off-service',
                  ]
 
 def get_color(data_name, color_set="deep"):
