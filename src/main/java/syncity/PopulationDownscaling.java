@@ -16,12 +16,11 @@ import utils.Structs.DispatcherArguments;
 public class PopulationDownscaling {
     
     
-    private static final String RUN_ID = "downscaling-test";
+    private static final String RUN_ID = "downscaling-test-line-beta1800-rebalance";
 
-    protected int vehiclesNum = 500;
-    protected int iterations = 2;
+    protected int iterations = 20;
 
-    protected float[] kValues = {1, 0.5f, 0.25f, 0.05f};
+    protected float[] kValues = {1, 0.5f, 0.25f, 0.05f, 0.01f};
     protected String algorithm = AlgorithmsNames.DRT;
 
     public void run(Path workdir) throws Exception {
@@ -47,8 +46,9 @@ public class PopulationDownscaling {
 	
 	for (float sampleSize: kValues) {
 	    String plansFile = popGen.writePopulation(workdir.toString(), sampleSize);
-	    String scenarioPath = workdir.resolve(algorithm+"-k"+sampleSize).toString();
-	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(scenarioPath,
+	    Path scenarioPath = workdir.resolve(algorithm+"-k"+sampleSize);
+	    Files.createDirectories(scenarioPath);
+	    BaseScenarioCreator scenario = ScenarioFactory.getScenario(scenarioPath.toString(),
 		    algorithm, plansFile, net, iterations,
 		    (DispatcherArguments) dispatcherParams.clone());
 
@@ -62,6 +62,6 @@ public class PopulationDownscaling {
 	if (args.length > 0) {
 	    workdir = Paths.get(args[0]).toAbsolutePath();
 	}
-	new AlgorithmsCompare().run(workdir);
+	new PopulationDownscaling().run(workdir);
     }
 }
