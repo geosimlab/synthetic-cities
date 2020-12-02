@@ -1,11 +1,14 @@
 package syncity.population;
 
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
@@ -15,6 +18,7 @@ import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.population.PopulationUtils;
 
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;;
 
 public class PopulationCSV {
     
@@ -44,6 +48,26 @@ public class PopulationCSV {
 	}
 	reader.close();
 	return pop;
+    }
+    
+    /*
+     * write population to a csv, with columns for home link, work link, departure time and return time
+     */
+    public static String writePopulationCSV(Population pop, String filename) throws IOException {
+	CSVWriter writer = new CSVWriter(new FileWriter(filename));
+	writer.writeNext(HEADER);
+	for (Person per : pop.getPersons().values()) {
+	    Pair<Activity, Activity> homeWork = PersonAnalysis.getPersonHomeWorkActivities(per);
+	    Id<Link> homeLink = homeWork.getLeft().getLinkId(); 
+	    Id<Link> workLink = homeWork.getRight().getLinkId(); 
+	    String homeDepTime = createTimeString(homeWork.getLeft().getEndTime()); 
+	    String workDepTime = createTimeString(homeWork.getRight().getEndTime());
+	    String[] nextLine = {homeLink.toString(), workLink.toString(), 
+		    homeDepTime, workDepTime};
+	    writer.writeNext(nextLine, true);
+	}
+	writer.close();
+	return filename;
     }
     
     /*
@@ -80,8 +104,22 @@ public class PopulationCSV {
 	return hh * 60*60 + mm * 60 + ss;
     }
     
+    /*
+     * format seconds as human readable time "hh:mm:ss" format
+     */
+    public static String createTimeString(double time) {
+	int timeInt = (int)time;
+	int ss = timeInt % 60;
+	timeInt /= 60;
+	int mm = timeInt % 60;
+	timeInt /= 60;
+	int hh = timeInt;
+	return String.format("%02d:%02d:%02d", hh, mm, ss);
+    }
+    
     public static void main(String[] args) throws IOException {
-	Population pop = readPopulationCSV("output/testPopCSV.csv");
+	Population pop = readPopulationCSV("output/testCSVwrite.csv");
 	new PopulationWriter(pop).write("output/testPopCSV.xml");
+	writePopulationCSV(pop, "output/testCSVwrite.csv");
     }
 }

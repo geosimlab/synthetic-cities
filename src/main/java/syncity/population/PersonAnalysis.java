@@ -40,6 +40,30 @@ public class PersonAnalysis {
     }
     
     /*
+     * Return a Pair of the person's home avtivity and work activity
+     * both are extracted from the plan
+     */
+    public static Pair<Activity, Activity> getPersonHomeWorkActivities(Person person){
+        List<PlanElement> planElements = person.getSelectedPlan()
+        	.getPlanElements();
+        Activity home = null;
+        Activity work= null;
+        for (PlanElement planElement : planElements) {
+            if (!(planElement instanceof Activity))
+        	continue;
+            Activity act = (Activity) planElement;
+            if (act.getType() == PersonFactory.HOME_ACTIVITY_TYPE && home == null) {
+        	home = act;
+            }
+            if (act.getType() == PersonFactory.WORK_ACTIVITY_TYPE) {
+        	work= act;
+            }
+        }
+        Pair<Activity, Activity> homeWorkPair = Pair.of(home, work);
+        return homeWorkPair;
+    }
+    
+    /*
      * Return the home-work distance of a person
      * useful for analysis of the population 
      */
