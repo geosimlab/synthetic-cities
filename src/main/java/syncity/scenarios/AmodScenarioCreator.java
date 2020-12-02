@@ -170,6 +170,12 @@ public class AmodScenarioCreator extends BaseScenarioCreator {
     protected int getNumberOfThreads() {
 	return 4;
     }
+    
+    
+    // ******************************
+    // * From here the code is mainly copied from amodeus, 
+    // * with small changes to allow external usa
+    // ******************************
 
     @Override
     public void prepare() throws Exception {

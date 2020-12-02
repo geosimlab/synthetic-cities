@@ -146,6 +146,10 @@ public class GridNetworkGenerator {
 	return out.toAbsolutePath().toString();
     }
 
+    /*
+     * Write data about the links length distribution
+     * can be used to generate histogram of link lengths
+     */
     private void writeLinkLengthDistribution(Path directory)
 	    throws IOException {
 	Map<Integer, Long> counts = net.getLinks().values().stream() //
@@ -157,6 +161,9 @@ public class GridNetworkGenerator {
 		Arrays.asList("LinkLength", "Count"));
     }
 
+    /*
+     * create the grid network according to the class parameters
+     */
     public void generateGridNetwork() {
 	for (int st = 0; st < this.numOfStreets; ++st) {
 	    for (int av = 0; av < this.numOfAvenues; ++av) {
@@ -177,6 +184,9 @@ public class GridNetworkGenerator {
 	}
     }
 
+    /*
+     * creates a node with coordinates of the given street 
+     */
     protected Node createNode(int streetNum, int avenueNum) {
 	NetworkFactory fac = this.net.getFactory();
 	// create new node

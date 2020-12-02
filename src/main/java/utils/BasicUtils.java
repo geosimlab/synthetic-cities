@@ -62,6 +62,10 @@ public class BasicUtils {
 	return false;
     }
 
+    /*
+     * Turns a map of lists to a csv. write into @filename
+     * and uses headers as the column headers
+     */
     public static <K, T> void  writeMapOfLists(Map<K, List<T>> map,
 	    String filename, List<String> headers) throws IOException {
 	BufferedWriter writer = new BufferedWriter(
@@ -80,6 +84,10 @@ public class BasicUtils {
 	System.out.println("Wrote Map as lists csv to:  " + filename);
     }
 
+    /*
+     * writes a simple key-value map to a to columns csv.
+     * headers is the titles of the columns
+     */
     public static <K, V> void writeSimpleMap(Map<K, V> map, String filename,
 	    List<String> headers) throws IOException {
 	BufferedWriter writer = new BufferedWriter(
@@ -97,6 +105,10 @@ public class BasicUtils {
 	System.out.println("Wrote Map as csv to:  " + filename);
     }
     
+    /*
+     * copies a file to the given directory,
+     * keeps the file original basename
+     */
     public static Path copyFiletoDir(Path file, Path dir) throws IOException {
 	Path target = dir.resolve(file.getFileName());
 	Files.copy(file, target);

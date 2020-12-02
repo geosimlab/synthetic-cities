@@ -13,6 +13,10 @@ import utils.MatsimUtils;
 
 public class PersonAnalysis {
 
+    /*
+     * Return a Pair of the person's home node and work node
+     * both are extracted from the plan
+     */
     public static Pair<Node, Node> getPersonHomeWork(Person person, Network network){
         List<PlanElement> planElements = person.getSelectedPlan()
         	.getPlanElements();
@@ -35,6 +39,10 @@ public class PersonAnalysis {
         return homeWorkPair;
     }
     
+    /*
+     * Return the home-work distance of a person
+     * useful for analysis of the population 
+     */
     public static double getHomeWorkDistance(Person person, Network network) {
 	Pair<Node, Node> pair = getPersonHomeWork(person, network);
 	return MatsimUtils.nodesDistance(pair.getLeft(), pair.getRight());

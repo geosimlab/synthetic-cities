@@ -15,11 +15,13 @@ import utils.Structs.PopulationArguments;
 
 public class PersonFactory {
 
+    // The standard names for the activities
     public static final String WORK_ACTIVITY_TYPE = "work";
     public static final String HOME_ACTIVITY_TYPE = "home";
 
     protected final static int SECONDS_IN_HOUR = 3600;
 
+    // Plan generation parameters
     protected float leaveHomeTime = 6;
     protected float leaveHomeWindowSize = 3;
     protected float workdayLength = 6;
@@ -30,13 +32,20 @@ public class PersonFactory {
 	updatePersonParameters(args);
     }
     
+    /*
+     * update person generation parameters with values from the configuration
+     */
     public void updatePersonParameters(PopulationArguments args) {
 	this.leaveHomeTime = args.leaveHomeTime;
 	this.leaveHomeWindowSize = args.leaveHomeWindowSize;
 	this.workdayLength = args.workdayLength;
 	this.workdayWindowSize = args.workdayWindowSize;
     }
-
+    
+    /*
+     * creates a person with a home-work-home plan,
+     * times are chosen by random according to the class parameters.
+     */
     public Person createPersonWithStandardPlan(Node homeNode,
 	    Node WorkNode, Population population) {
 	Person person = createPerson(population);
@@ -90,35 +99,46 @@ public class PersonFactory {
      * @param leaveWork         time to leave work (in hours 0-24)
      * @return the created plan
      */
-    protected Plan createHomeWorkHomePlan(
+    public Plan createHomeWorkHomePlan(
 	    PopulationFactory populationFactory, Node homeNode,
 	    double leaveHome, Node workNode, double leaveWork) {
 
-	Plan plan = populationFactory.createPlan();
-	Link homeLink = homeNode.getInLinks().values().iterator().next();
-	Link workLink = workNode.getInLinks().values().iterator().next();
+	Id<Link> homeLink = homeNode.getInLinks().values().iterator().next().getId();
+	Id<Link> workLink = workNode.getInLinks().values().iterator().next().getId();
 
+	return createHomeWorkHomePlan(populationFactory, 
+		leaveHome * SECONDS_IN_HOUR, 
+		leaveWork * SECONDS_IN_HOUR,
+		homeLink, workLink);
+    }
+    
+    /*
+     * The same as above but with links instead of nodes
+     */
+    public Plan createHomeWorkHomePlan(PopulationFactory populationFactory,
+	    double leaveHome, double leaveWork, Id<Link> homeLink, Id<Link> workLink) {
+	Plan plan = populationFactory.createPlan();
 	Activity morningActivity = populationFactory
-		.createActivityFromLinkId(HOME_ACTIVITY_TYPE, homeLink.getId());
-	morningActivity.setEndTime(leaveHome * SECONDS_IN_HOUR);
+		.createActivityFromLinkId(HOME_ACTIVITY_TYPE, homeLink);
+	morningActivity.setEndTime(leaveHome);
 	plan.addActivity(morningActivity); // add the Activity to the Plan
 
 	Leg leg = populationFactory.createLeg("av");
-	leg.setDepartureTime(leaveHome * SECONDS_IN_HOUR);
+	leg.setDepartureTime(leaveHome);
 	plan.addLeg(leg);
 
 	Activity WorkActivity = populationFactory
-		.createActivityFromLinkId(WORK_ACTIVITY_TYPE, workLink.getId());
-	WorkActivity.setStartTime(leaveHome * SECONDS_IN_HOUR);
-	WorkActivity.setEndTime(leaveWork * SECONDS_IN_HOUR);
+		.createActivityFromLinkId(WORK_ACTIVITY_TYPE, workLink);
+	WorkActivity.setStartTime(leaveHome);
+	WorkActivity.setEndTime(leaveWork);
 	plan.addActivity(WorkActivity);
 
 	leg = populationFactory.createLeg("av");
-	leg.setDepartureTime(leaveWork * SECONDS_IN_HOUR);
+	leg.setDepartureTime(leaveWork);
 	plan.addLeg(leg);
 
 	Activity eveningActivity = populationFactory
-		.createActivityFromLinkId(HOME_ACTIVITY_TYPE, homeLink.getId());
+		.createActivityFromLinkId(HOME_ACTIVITY_TYPE, homeLink);
 	plan.addActivity(eveningActivity);
 	return plan;
     }
